@@ -1,0 +1,17 @@
+{
+  "id": 101,
+  "name": "First Steps",
+  "world": 1,
+  "maxMoves": 15,
+  "mechanics": ["movement"],
+  "hint": "Use arrow keys to reach the goal (G).",
+  "grid": [
+    "##########",
+    "#@.......#",
+    "#........#",
+    "#........#",
+    "#........#",
+    "#.......G#",
+    "##########"
+  ]
+}

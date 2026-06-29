@@ -1,0 +1,17 @@
+{
+  "id": 104,
+  "name": "Push It",
+  "world": 1,
+  "maxMoves": 30,
+  "mechanics": ["sokoban"],
+  "hint": "Push the box (B) onto the goal (G).",
+  "grid": [
+    "##########",
+    "#@.......#",
+    "#..B.....#",
+    "#........#",
+    "#........#",
+    "#.......G#",
+    "##########"
+  ]
+}

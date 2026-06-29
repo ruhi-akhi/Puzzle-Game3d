@@ -1,0 +1,17 @@
+{
+  "id": 402,
+  "name": "Twin Path",
+  "world": 4,
+  "maxMoves": 25,
+  "mechanics": ["clone"],
+  "hint": "Plan moves so your clone helps you reach the goal.",
+  "grid": [
+    "##########",
+    "#@..#....#",
+    "#...#..G.#",
+    "#...#....#",
+    "#...C....#",
+    "#........#",
+    "##########"
+  ]
+}

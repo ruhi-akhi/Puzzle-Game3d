@@ -1,0 +1,17 @@
+{
+  "id": 602,
+  "name": "Final Challenge",
+  "world": 6,
+  "maxMoves": 35,
+  "mechanics": ["key_door", "sokoban", "switch"],
+  "hint": "Combine everything you've learned!",
+  "grid": [
+    "##########",
+    "#@..K..R.#",
+    "#.###.r..#",
+    "#...B....#",
+    "#.###..G.#",
+    "#........#",
+    "##########"
+  ]
+}

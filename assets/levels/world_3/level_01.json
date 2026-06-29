@@ -1,0 +1,16 @@
+{
+  "id": 301,
+  "name": "Slippery",
+  "world": 3,
+  "maxMoves": 15,
+  "mechanics": ["ice"],
+  "hint": "Ice tiles (I) make you slide until you hit a wall!",
+  "grid": [
+    "##########",
+    "#@.......#",
+    "#.IIII...#",
+    "#........#",
+    "#.......G#",
+    "##########"
+  ]
+}

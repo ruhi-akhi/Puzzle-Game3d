@@ -1,0 +1,17 @@
+{
+  "id": 201,
+  "name": "Laser Intro",
+  "world": 2,
+  "maxMoves": 20,
+  "mechanics": ["laser"],
+  "hint": "Avoid the red laser beam! Go around it.",
+  "grid": [
+    "##########",
+    "#@.......#",
+    "#........#",
+    "#...L....#",
+    "#........#",
+    "#.......G#",
+    "##########"
+  ]
+}

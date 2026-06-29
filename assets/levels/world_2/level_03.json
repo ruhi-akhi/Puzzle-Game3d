@@ -1,0 +1,17 @@
+{
+  "id": 203,
+  "name": "Switch & Laser",
+  "world": 2,
+  "maxMoves": 30,
+  "mechanics": ["laser", "switch"],
+  "hint": "Step on the red switch (R) to open the red door (r).",
+  "grid": [
+    "##########",
+    "#@..R....#",
+    "#.rrr....#",
+    "#...L....#",
+    "#........#",
+    "#.......G#",
+    "##########"
+  ]
+}

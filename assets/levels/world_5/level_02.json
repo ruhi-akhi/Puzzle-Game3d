@@ -1,0 +1,17 @@
+{
+  "id": 502,
+  "name": "Gravity Maze",
+  "world": 5,
+  "maxMoves": 25,
+  "mechanics": ["gravity"],
+  "hint": "Use gravity pads to reach otherwise inaccessible areas.",
+  "grid": [
+    "##########",
+    "#@..g....#",
+    "#.###....#",
+    "#...#..g.#",
+    "#.###....#",
+    "#.......G#",
+    "##########"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "id": 103,
+  "name": "Locked Door",
+  "world": 1,
+  "maxMoves": 25,
+  "mechanics": ["key_door"],
+  "hint": "Get the key, then pass through the door (D).",
+  "grid": [
+    "##########",
+    "#@..K....#",
+    "#.###.D..#",
+    "#...#....#",
+    "#.###....#",
+    "#.......G#",
+    "##########"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "id": 501,
+  "name": "Falling Up",
+  "world": 5,
+  "maxMoves": 20,
+  "mechanics": ["gravity"],
+  "hint": "Step on gravity pad (g) to flip gravity!",
+  "grid": [
+    "##########",
+    "#@.......#",
+    "#........#",
+    "#...g....#",
+    "#........#",
+    "#.......G#",
+    "##########"
+  ]
+}

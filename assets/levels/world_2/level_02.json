@@ -1,0 +1,17 @@
+{
+  "id": 202,
+  "name": "Mirror Reflection",
+  "world": 2,
+  "maxMoves": 25,
+  "mechanics": ["laser", "mirror"],
+  "hint": "The mirror (/) reflects the laser. Find a safe path.",
+  "grid": [
+    "##########",
+    "#@.......#",
+    "#........#",
+    "#L..../..#",
+    "#........#",
+    "#.......G#",
+    "##########"
+  ]
+}

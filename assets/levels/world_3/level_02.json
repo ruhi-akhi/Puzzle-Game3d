@@ -1,0 +1,17 @@
+{
+  "id": 302,
+  "name": "Ice Maze",
+  "world": 3,
+  "maxMoves": 20,
+  "mechanics": ["ice"],
+  "hint": "Navigate the ice carefully. You can't stop mid-slide!",
+  "grid": [
+    "##########",
+    "#@..I....#",
+    "#.##I....#",
+    "#...I..I.#",
+    "#.##.....#",
+    "#.....I.G#",
+    "##########"
+  ]
+}

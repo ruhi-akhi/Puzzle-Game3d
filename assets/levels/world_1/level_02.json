@@ -1,0 +1,17 @@
+{
+  "id": 102,
+  "name": "Key Hunt",
+  "world": 1,
+  "maxMoves": 20,
+  "mechanics": ["key_door"],
+  "hint": "Collect the key (K) before reaching the goal.",
+  "grid": [
+    "##########",
+    "#@.......#",
+    "#.###....#",
+    "#...#..K.#",
+    "#.###....#",
+    "#.......G#",
+    "##########"
+  ]
+}

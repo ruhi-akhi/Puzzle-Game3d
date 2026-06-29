@@ -1,0 +1,17 @@
+{
+  "id": 601,
+  "name": "Teleporter",
+  "world": 6,
+  "maxMoves": 20,
+  "mechanics": ["teleporter"],
+  "hint": "Step on teleporter (T) to warp to its pair (t).",
+  "grid": [
+    "##########",
+    "#@.......#",
+    "#...T....#",
+    "#.#####..#",
+    "#.....t..#",
+    "#.......G#",
+    "##########"
+  ]
+}

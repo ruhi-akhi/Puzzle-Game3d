@@ -1,0 +1,32 @@
+name: echo_labyrinth
+description: Echo Labyrinth - A dark sci-fi puzzle game built with Flutter & Flame
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flame: ^1.18.0
+  flame_audio: ^2.10.0
+  shared_preferences: ^2.2.3
+  path_provider: ^2.1.3
+  google_fonts: ^6.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/levels/world_1/
+    - assets/levels/world_2/
+    - assets/levels/world_3/
+    - assets/levels/world_4/
+    - assets/levels/world_5/
+    - assets/levels/world_6/
+    - assets/audio/
