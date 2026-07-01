@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../game/models/game_state.dart';
 import '../../game/models/level_data.dart' show LevelData, worlds;
 import '../../game/services/level_loader.dart';
+import '../../game/services/audio_service.dart';
 import '../../game/services/progress_service.dart';
 import '../../game/systems/game_engine.dart';
 import '../../theme/game_colors.dart';
@@ -48,10 +49,10 @@ class _GameScreenState extends State<GameScreen> {
     if (!mounted) return;
 
     if (status == GameStatus.won) {
+      AudioService.playWin();
       final stars = _engine.calculateStars();
-      final levelId = ProgressService.levelId(widget.world, widget.levelIndex);
-      await ProgressService.markLevelComplete(levelId);
-      await ProgressService.setStars(levelId, stars);
+      await ProgressService.markLevelComplete(widget.level.id);
+      await ProgressService.setStars(widget.level.id, stars);
 
       if (!mounted) return;
       showDialog(

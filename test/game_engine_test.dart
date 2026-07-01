@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:echo_labyrinth/game/services/progress_service.dart';
 import 'package:echo_labyrinth/game/models/level_data.dart';
 import 'package:echo_labyrinth/game/models/tile_type.dart';
 import 'package:echo_labyrinth/game/models/game_state.dart';
@@ -120,6 +121,25 @@ void main() {
       expect(engine.state.playerX, 3);
     });
 
+    test('sokoban win when box on goal', () {
+      const boxLevel = LevelData(
+        id: 996,
+        name: 'Sokoban Win',
+        world: 1,
+        maxMoves: 10,
+        mechanics: ['sokoban'],
+        grid: [
+          '######',
+          '#@BG.#',
+          '#.....#',
+          '######',
+        ],
+      );
+      final engine = GameEngine(level: boxLevel);
+      engine.move(Direction.right);
+      expect(engine.state.status, GameStatus.won);
+    });
+
     test('stars calculation', () {
       final engine = GameEngine(level: testLevel);
       engine.move(Direction.right);
@@ -143,6 +163,13 @@ void main() {
       expect(level.id, 101);
       expect(level.width, 3);
       expect(level.height, 3);
+    });
+  });
+
+  group('ProgressService', () {
+    test('level ids match json format', () {
+      expect(ProgressService.levelId(1, 5), 105);
+      expect(ProgressService.levelId(2, 1), 201);
     });
   });
 }

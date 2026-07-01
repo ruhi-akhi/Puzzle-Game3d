@@ -2,16 +2,15 @@
   "id": 302,
   "name": "Ice Maze",
   "world": 3,
-  "maxMoves": 20,
+  "maxMoves": 16,
   "mechanics": ["ice"],
-  "hint": "Navigate the ice carefully. You can't stop mid-slide!",
+  "hint": "Navigate ice maze — one wrong slide = reset!",
   "grid": [
     "##########",
     "#@..I....#",
     "#.##I....#",
-    "#...I..I.#",
-    "#.##.....#",
-    "#.....I.G#",
+    "#I..#..I.#",
+    "#.##..I.G#",
     "##########"
   ]
 }

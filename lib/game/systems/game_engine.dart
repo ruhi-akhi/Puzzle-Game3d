@@ -12,6 +12,7 @@ class GameEngine {
 
   static GameState _initState(LevelData level) {
     final grid = <List<TileType>>[];
+    final goals = <String>{};
     var px = 0, py = 0;
 
     for (var y = 0; y < level.height; y++) {
@@ -22,6 +23,9 @@ class GameEngine {
         if (tile == TileType.player) {
           px = x;
           py = y;
+          row.add(TileType.floor);
+        } else if (tile == TileType.goal) {
+          goals.add('$x,$y');
           row.add(TileType.floor);
         } else {
           row.add(tile);
@@ -36,6 +40,7 @@ class GameEngine {
       playerY: py,
       movesUsed: 0,
       maxMoves: level.maxMoves,
+      goalPositions: goals,
       levelId: level.id,
       levelName: level.name,
       darkMode: level.mechanics.contains('dark_mode'),
@@ -226,56 +231,42 @@ class GameEngine {
   }
 
   void _checkWin() {
-    // Win: reach goal
-    if (state.tileAt(state.playerX, state.playerY) == TileType.goal) {
+    if (_allBoxesOnGoals()) {
       state.status = GameStatus.won;
       return;
     }
 
-    // Win: all boxes on goals (sokoban style)
-    if (level.mechanics.contains('sokoban')) {
-      var allOnGoals = true;
-      var hasBoxes = false;
-      for (var y = 0; y < state.height; y++) {
-        for (var x = 0; x < state.width; x++) {
-          if (state.tileAt(x, y) == TileType.box) {
-            hasBoxes = true;
-            allOnGoals = false;
-          }
-        }
-      }
-      if (hasBoxes == false || allOnGoals) {
-        // Check boxes on goals
-        var boxesOnGoals = 0;
-        var totalGoals = 0;
-        for (var y = 0; y < state.height; y++) {
-          for (var x = 0; x < state.width; x++) {
-            if (state.tileAt(x, y) == TileType.goal) totalGoals++;
-          }
-        }
-        // Simplified: player at goal with key and door open
-      }
+    if (state.isGoalAt(state.playerX, state.playerY)) {
+      state.status = GameStatus.won;
+      return;
     }
 
-    // Win: door reached with key collected and standing on door tile
     if (state.hasKey) {
       final tile = state.tileAt(state.playerX, state.playerY);
       if (tile == TileType.door || tile == TileType.doorOpen) {
         state.setTile(state.playerX, state.playerY, TileType.doorOpen);
       }
     }
+  }
 
-    // Check if player is on goal tile
+  bool _allBoxesOnGoals() {
+    if (state.goalPositions.isEmpty) return false;
+
+    var hasBox = false;
     for (var y = 0; y < state.height; y++) {
       for (var x = 0; x < state.width; x++) {
-        if (state.grid[y][x] == TileType.goal &&
-            x == state.playerX &&
-            y == state.playerY) {
-          state.status = GameStatus.won;
-          return;
-        }
+        if (state.tileAt(x, y) == TileType.box) hasBox = true;
       }
     }
+    if (!hasBox) return false;
+
+    for (final key in state.goalPositions) {
+      final parts = key.split(',');
+      final x = int.parse(parts[0]);
+      final y = int.parse(parts[1]);
+      if (state.tileAt(x, y) != TileType.box) return false;
+    }
+    return true;
   }
 
   int calculateStars() {

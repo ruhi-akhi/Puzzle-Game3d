@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:math' as math;
 import '../../game/models/tile_type.dart';
+import '../../game/services/audio_service.dart';
 import '../../game/systems/game_engine.dart';
 import '../../game/rendering/game_painter.dart';
 import '../../theme/game_colors.dart';
@@ -20,27 +22,87 @@ class GameBoard extends StatefulWidget {
   State<GameBoard> createState() => _GameBoardState();
 }
 
-class _GameBoardState extends State<GameBoard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animController;
+class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
+  late AnimationController _glowController;
+  late AnimationController _moveController;
+  late AnimationController _tiltController;
+
+  double _displayPlayerX = 0;
+  double _displayPlayerY = 0;
+  double _fromX = 0;
+  double _fromY = 0;
+  double _boardTilt = 0;
 
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(
+    _displayPlayerX = widget.engine.state.playerX.toDouble();
+    _displayPlayerY = widget.engine.state.playerY.toDouble();
+
+    _glowController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat();
+
+    _moveController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 180),
+    )..addListener(() {
+        setState(() {
+          _displayPlayerX = _fromX +
+              (widget.engine.state.playerX - _fromX) * _moveController.value;
+          _displayPlayerY = _fromY +
+              (widget.engine.state.playerY - _fromY) * _moveController.value;
+        });
+      });
+
+    _tiltController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    )..addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
-    _animController.dispose();
+    _glowController.dispose();
+    _moveController.dispose();
+    _tiltController.dispose();
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(covariant GameBoard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.engine.state.movesUsed == 0 &&
+        oldWidget.engine.state.movesUsed > 0) {
+      _displayPlayerX = widget.engine.state.playerX.toDouble();
+      _displayPlayerY = widget.engine.state.playerY.toDouble();
+    }
+  }
+
   void _handleMove(Direction dir) {
+    final beforeX = widget.engine.state.playerX;
+    final beforeY = widget.engine.state.playerY;
+
     if (widget.engine.move(dir)) {
+      AudioService.playMove();
+      _fromX = beforeX.toDouble();
+      _fromY = beforeY.toDouble();
+      _moveController.forward(from: 0);
+
+      final tilt = switch (dir) {
+        Direction.up => -0.08,
+        Direction.down => 0.08,
+        Direction.left => -0.06,
+        Direction.right => 0.06,
+      };
+      _boardTilt = tilt;
+      _tiltController.forward(from: 0).then((_) {
+        if (mounted) {
+          _tiltController.reverse();
+        }
+      });
+
       widget.onStateChanged();
       setState(() {});
     }
@@ -75,6 +137,7 @@ class _GameBoardState extends State<GameBoard>
     final state = widget.engine.state;
     final screenSize = MediaQuery.of(context).size;
     final tileSize = _calculateTileSize(screenSize, state.width, state.height);
+    final tiltAnim = _tiltController.value * _boardTilt;
 
     return Focus(
       autofocus: true,
@@ -85,17 +148,42 @@ class _GameBoardState extends State<GameBoard>
           Expanded(
             child: Center(
               child: AnimatedBuilder(
-                animation: _animController,
+                animation: Listenable.merge([_glowController, _tiltController]),
                 builder: (context, _) {
-                  return CustomPaint(
-                    size: Size(
-                      state.width * tileSize,
-                      state.height * tileSize,
-                    ),
-                    painter: GamePainter(
-                      state: state,
-                      tileSize: tileSize,
-                      animationPhase: _animController.value,
+                  final matrix = Matrix4.identity()
+                    ..setEntry(3, 2, 0.0012)
+                    ..rotateX(0.18 + tiltAnim)
+                    ..rotateY(tiltAnim * 0.5);
+
+                  return Transform(
+                    transform: matrix,
+                    alignment: Alignment.center,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: GameColors.neonCyan.withOpacity(
+                              0.15 + 0.1 * math.sin(_glowController.value * math.pi * 2),
+                            ),
+                            blurRadius: 30,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: CustomPaint(
+                        size: Size(
+                          state.width * tileSize,
+                          state.height * tileSize,
+                        ),
+                        painter: GamePainter(
+                          state: state,
+                          tileSize: tileSize,
+                          animationPhase: _glowController.value,
+                          displayPlayerX: _displayPlayerX,
+                          displayPlayerY: _displayPlayerY,
+                          boardTilt: tiltAnim.abs(),
+                        ),
+                      ),
                     ),
                   );
                 },

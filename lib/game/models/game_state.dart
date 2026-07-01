@@ -33,6 +33,7 @@ class GameState {
   GameStatus status;
   List<CloneState> cloneHistory;
   List<(int, int)> laserBeams;
+  Set<String> goalPositions;
   int levelId;
   String levelName;
 
@@ -51,12 +52,15 @@ class GameState {
     this.status = GameStatus.playing,
     this.cloneHistory = const [],
     this.laserBeams = const [],
+    this.goalPositions = const {},
     this.levelId = 0,
     this.levelName = '',
   });
 
   int get width => grid.isEmpty ? 0 : grid.first.length;
   int get height => grid.length;
+
+  bool isGoalAt(int x, int y) => goalPositions.contains('$x,$y');
 
   TileType tileAt(int x, int y) {
     if (x < 0 || y < 0 || x >= width || y >= height) {
@@ -97,6 +101,7 @@ class GameState {
       status: status,
       cloneHistory: List<CloneState>.from(cloneHistory),
       laserBeams: List<(int, int)>.from(laserBeams),
+      goalPositions: Set<String>.from(goalPositions),
       levelId: levelId,
       levelName: levelName,
     );

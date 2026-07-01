@@ -2,16 +2,15 @@
   "id": 402,
   "name": "Twin Path",
   "world": 4,
-  "maxMoves": 25,
+  "maxMoves": 20,
   "mechanics": ["clone"],
-  "hint": "Plan moves so your clone helps you reach the goal.",
+  "hint": "Clone and player must cooperate to reach goal.",
   "grid": [
     "##########",
-    "#@..#....#",
-    "#...#..G.#",
+    "#@..#..G.#",
     "#...#....#",
-    "#...C....#",
-    "#........#",
+    "#...C..#.#",
+    "#...#....#",
     "##########"
   ]
 }

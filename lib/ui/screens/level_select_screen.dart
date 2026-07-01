@@ -16,6 +16,8 @@ class LevelSelectScreen extends StatefulWidget {
 class _LevelSelectScreenState extends State<LevelSelectScreen> {
   Set<int> _completed = {};
   Map<int, int> _stars = {};
+  Map<int, bool> _unlocked = {};
+  bool _loading = true;
 
   @override
   void initState() {
@@ -24,16 +26,23 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
   }
 
   Future<void> _loadProgress() async {
+    await ProgressService.syncFromStars();
     final completed = await ProgressService.getCompletedLevels();
     final stars = <int, int>{};
+    final unlocked = <int, bool>{};
+
     for (var i = 1; i <= widget.world.levelCount; i++) {
       final id = ProgressService.levelId(widget.world.id, i);
       stars[id] = await ProgressService.getStars(id);
+      unlocked[i] = await ProgressService.isLevelUnlocked(widget.world.id, i);
     }
+
     if (mounted) {
       setState(() {
         _completed = completed;
         _stars = stars;
+        _unlocked = unlocked;
+        _loading = false;
       });
     }
   }
@@ -58,55 +67,54 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
         ),
         centerTitle: true,
       ),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 1.2,
-        ),
-        itemCount: widget.world.levelCount,
-        itemBuilder: (context, index) {
-          final levelNum = index + 1;
-          final levelId = ProgressService.levelId(widget.world.id, levelNum);
-          final isCompleted = _completed.contains(levelId);
-          final stars = _stars[levelId] ?? 0;
+      body: _loading
+          ? const Center(
+              child: CircularProgressIndicator(color: GameColors.neonCyan),
+            )
+          : GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1.2,
+              ),
+              itemCount: widget.world.levelCount,
+              itemBuilder: (context, index) {
+                final levelNum = index + 1;
+                final levelId = ProgressService.levelId(widget.world.id, levelNum);
+                final isCompleted = _completed.contains(levelId);
+                final stars = _stars[levelId] ?? 0;
+                final unlocked = _unlocked[levelNum] ?? false;
 
-          return FutureBuilder<bool>(
-            future: ProgressService.isLevelUnlocked(widget.world.id, levelNum),
-            builder: (context, snapshot) {
-              final unlocked = snapshot.data ?? (levelNum == 1 && widget.world.id == 1);
-              return _LevelTile(
-                levelNum: levelNum,
-                unlocked: unlocked,
-                completed: isCompleted,
-                stars: stars,
-                onTap: unlocked
-                    ? () async {
-                        final level = await LevelLoader.loadLevel(
-                          widget.world.id,
-                          levelNum,
-                        );
-                        if (!context.mounted) return;
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => GameScreen(
-                              level: level,
-                              world: widget.world.id,
-                              levelIndex: levelNum,
+                return _LevelTile(
+                  levelNum: levelNum,
+                  unlocked: unlocked,
+                  completed: isCompleted,
+                  stars: stars,
+                  onTap: unlocked
+                      ? () async {
+                          final level = await LevelLoader.loadLevel(
+                            widget.world.id,
+                            levelNum,
+                          );
+                          if (!context.mounted) return;
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => GameScreen(
+                                level: level,
+                                world: widget.world.id,
+                                levelIndex: levelNum,
+                              ),
                             ),
-                          ),
-                        );
-                        _loadProgress();
-                      }
-                    : null,
-              );
-            },
-          );
-        },
-      ),
+                          );
+                          _loadProgress();
+                        }
+                      : null,
+                );
+              },
+            ),
     );
   }
 }
@@ -136,11 +144,15 @@ class _LevelTile extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
         decoration: BoxDecoration(
           color: unlocked ? color.withOpacity(0.08) : Colors.white.withOpacity(0.03),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: color.withOpacity(unlocked ? 0.5 : 0.2)),
+          boxShadow: unlocked
+              ? [BoxShadow(color: color.withOpacity(0.2), blurRadius: 8)]
+              : null,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -157,10 +169,9 @@ class _LevelTile extends StatelessWidget {
                 ),
               ),
               if (stars > 0)
-                Text(
-                  '⭐' * stars,
-                  style: const TextStyle(fontSize: 10),
-                ),
+                Text('⭐' * stars, style: const TextStyle(fontSize: 10)),
+              if (completed && stars == 0)
+                const Icon(Icons.check, color: GameColors.doorOpen, size: 16),
             ],
           ],
         ),

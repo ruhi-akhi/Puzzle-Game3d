@@ -38,12 +38,21 @@ class GamePainter extends CustomPainter {
   final GameState state;
   final double tileSize;
   final double animationPhase;
+  final double displayPlayerX;
+  final double displayPlayerY;
+  final double boardTilt;
 
   GamePainter({
     required this.state,
     required this.tileSize,
     this.animationPhase = 0,
+    this.displayPlayerX = -1,
+    this.displayPlayerY = -1,
+    this.boardTilt = 0,
   });
+
+  double get _playerX => displayPlayerX >= 0 ? displayPlayerX : state.playerX.toDouble();
+  double get _playerY => displayPlayerY >= 0 ? displayPlayerY : state.playerY.toDouble();
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -57,6 +66,14 @@ class GamePainter extends CustomPainter {
     for (var y = 0; y < state.height; y++) {
       for (var x = 0; x < state.width; x++) {
         _drawTile(canvas, x, y, state.tileAt(x, y));
+        if (state.isGoalAt(x, y)) {
+          _drawGoal(canvas, Rect.fromLTWH(
+            x * tileSize + 1,
+            y * tileSize + 1,
+            tileSize - 2,
+            tileSize - 2,
+          ));
+        }
       }
     }
 
@@ -65,8 +82,9 @@ class GamePainter extends CustomPainter {
       _drawClone(canvas, clone.x, clone.y);
     }
 
-    // Draw player with glow
-    _drawPlayer(canvas, state.playerX, state.playerY);
+    // Draw player with glow (3D shadow)
+    _drawPlayerShadow(canvas, _playerX, _playerY);
+    _drawPlayer(canvas, _playerX, _playerY);
 
     canvas.restore();
   }
@@ -84,11 +102,12 @@ class GamePainter extends CustomPainter {
     switch (type) {
       case TileType.wall:
         paint.color = GameColors.wall;
+        final wallRect = rect.shift(Offset(0, -tileSize * 0.06 * (1 + boardTilt)));
         canvas.drawRRect(
-          RRect.fromRectAndRadius(rect, const Radius.circular(4)),
+          RRect.fromRectAndRadius(wallRect, const Radius.circular(4)),
           paint,
         );
-        _drawGlow(canvas, rect, GameColors.wallGlow, 0.3);
+        _drawGlow(canvas, wallRect, GameColors.wallGlow, 0.3 + boardTilt * 0.2);
       case TileType.floor:
       case TileType.empty:
         paint.color = GameColors.floor;
@@ -206,10 +225,24 @@ class GamePainter extends CustomPainter {
     );
   }
 
-  void _drawPlayer(Canvas canvas, int x, int y) {
+  void _drawPlayerShadow(Canvas canvas, double x, double y) {
     final center = Offset(
       x * tileSize + tileSize / 2,
-      y * tileSize + tileSize / 2,
+      y * tileSize + tileSize / 2 + tileSize * 0.12,
+    );
+    final shadow = Paint()
+      ..color = GameColors.player.withOpacity(0.25)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: tileSize * 0.5, height: tileSize * 0.2),
+      shadow,
+    );
+  }
+
+  void _drawPlayer(Canvas canvas, double x, double y) {
+    final center = Offset(
+      x * tileSize + tileSize / 2,
+      y * tileSize + tileSize / 2 - tileSize * 0.08 * (1 + boardTilt),
     );
     final pulse = 1.0 + 0.05 * (animationPhase % 1.0);
     final radius = tileSize * 0.32 * pulse;
@@ -339,5 +372,8 @@ class GamePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant GamePainter oldDelegate) =>
       oldDelegate.state != state ||
-      oldDelegate.animationPhase != animationPhase;
+      oldDelegate.animationPhase != animationPhase ||
+      oldDelegate.displayPlayerX != displayPlayerX ||
+      oldDelegate.displayPlayerY != displayPlayerY ||
+      oldDelegate.boardTilt != boardTilt;
 }

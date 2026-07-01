@@ -2,16 +2,15 @@
   "id": 401,
   "name": "Echo",
   "world": 4,
-  "maxMoves": 20,
+  "maxMoves": 16,
   "mechanics": ["clone"],
-  "hint": "Your shadow copies your previous moves. Use it wisely!",
+  "hint": "Shadow copies your moves. Use timing!",
   "grid": [
     "##########",
-    "#@.......#",
-    "#........#",
+    "#@..#....#",
+    "#...#..G.#",
     "#...C....#",
-    "#........#",
-    "#.......G#",
+    "#...#....#",
     "##########"
   ]
 }

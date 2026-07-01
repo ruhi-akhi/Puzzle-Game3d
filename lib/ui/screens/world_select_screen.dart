@@ -4,8 +4,19 @@ import '../../game/services/progress_service.dart';
 import '../../theme/game_colors.dart';
 import 'level_select_screen.dart';
 
-class WorldSelectScreen extends StatelessWidget {
+class WorldSelectScreen extends StatefulWidget {
   const WorldSelectScreen({super.key});
+
+  @override
+  State<WorldSelectScreen> createState() => _WorldSelectScreenState();
+}
+
+class _WorldSelectScreenState extends State<WorldSelectScreen> {
+  @override
+  void initState() {
+    super.initState();
+    ProgressService.syncFromStars();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +43,10 @@ class WorldSelectScreen extends StatelessWidget {
         itemCount: worlds.length,
         itemBuilder: (context, index) {
           final world = worlds[index];
-          return _WorldCard(world: world);
+          return _WorldCard(
+            key: ValueKey('world_${world.id}'),
+            world: world,
+          );
         },
       ),
     );
@@ -41,7 +55,7 @@ class WorldSelectScreen extends StatelessWidget {
 
 class _WorldCard extends StatefulWidget {
   final WorldInfo world;
-  const _WorldCard({required this.world});
+  const _WorldCard({super.key, required this.world});
 
   @override
   State<_WorldCard> createState() => _WorldCardState();
@@ -54,18 +68,12 @@ class _WorldCardState extends State<_WorldCard> {
   @override
   void initState() {
     super.initState();
-    _checkUnlock();
+    ProgressService.syncFromStars().then((_) => _refresh());
   }
 
-  Future<void> _checkUnlock() async {
-    final unlocked = await ProgressService.isLevelUnlocked(widget.world.id, 1);
-    final completed = await ProgressService.getCompletedLevels();
-    var count = 0;
-    for (var i = 1; i <= widget.world.levelCount; i++) {
-      if (completed.contains(ProgressService.levelId(widget.world.id, i))) {
-        count++;
-      }
-    }
+  Future<void> _refresh() async {
+    final unlocked = await ProgressService.isWorldUnlocked(widget.world.id);
+    final count = await ProgressService.getWorldCompletedCount(widget.world.id);
     if (mounted) {
       setState(() {
         _unlocked = unlocked;
@@ -97,16 +105,18 @@ class _WorldCardState extends State<_WorldCard> {
       padding: const EdgeInsets.only(bottom: 12),
       child: GestureDetector(
         onTap: _unlocked
-            ? () {
-                Navigator.push(
+            ? () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => LevelSelectScreen(world: widget.world),
                   ),
-                ).then((_) => _checkUnlock());
+                );
+                _refresh();
               }
             : null,
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 400),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: _unlocked
@@ -120,12 +130,7 @@ class _WorldCardState extends State<_WorldCard> {
               width: 2,
             ),
             boxShadow: _unlocked
-                ? [
-                    BoxShadow(
-                      color: _worldColor.withOpacity(0.2),
-                      blurRadius: 12,
-                    ),
-                  ]
+                ? [BoxShadow(color: _worldColor.withOpacity(0.2), blurRadius: 12)]
                 : null,
           ),
           child: Row(

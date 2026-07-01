@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../game/services/audio_service.dart';
 import '../../game/services/progress_service.dart';
 import '../../theme/game_colors.dart';
 import '../widgets/neon_button.dart';
@@ -104,7 +105,9 @@ class _MenuScreenState extends State<MenuScreen>
                 NeonButton(
                   label: 'PLAY',
                   icon: Icons.play_arrow,
-                  onPressed: () {
+                  onPressed: () async {
+                    await AudioService.playBgm();
+                    if (!context.mounted) return;
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -119,6 +122,28 @@ class _MenuScreenState extends State<MenuScreen>
                   icon: Icons.help_outline,
                   color: GameColors.neonPurple,
                   onPressed: () => _showHowToPlay(context),
+                ),
+                const SizedBox(height: 16),
+                NeonButton(
+                  label: AudioService.musicEnabled ? 'MUSIC: ON' : 'MUSIC: OFF',
+                  icon: AudioService.musicEnabled ? Icons.music_note : Icons.music_off,
+                  color: GameColors.neonPink,
+                  small: true,
+                  onPressed: () async {
+                    await AudioService.toggleMusic();
+                    if (mounted) setState(() {});
+                  },
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => _confirmReset(context),
+                  child: Text(
+                    'Reset Progress',
+                    style: TextStyle(
+                      color: GameColors.hudText.withOpacity(0.4),
+                      fontSize: 12,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -145,6 +170,34 @@ class _MenuScreenState extends State<MenuScreen>
     return CustomPaint(
       size: Size.infinite,
       painter: _StarFieldPainter(),
+    );
+  }
+
+  void _confirmReset(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A2332),
+        title: const Text('Reset Progress?', style: TextStyle(color: GameColors.laser)),
+        content: const Text(
+          'All completed levels and stars will be cleared.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('CANCEL', style: TextStyle(color: GameColors.hudText)),
+          ),
+          TextButton(
+            onPressed: () async {
+              await ProgressService.resetProgress();
+              if (ctx.mounted) Navigator.pop(ctx);
+              _loadProgress();
+            },
+            child: const Text('RESET', style: TextStyle(color: GameColors.laser)),
+          ),
+        ],
+      ),
     );
   }
 

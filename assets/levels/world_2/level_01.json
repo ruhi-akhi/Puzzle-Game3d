@@ -2,16 +2,15 @@
   "id": 201,
   "name": "Laser Intro",
   "world": 2,
-  "maxMoves": 20,
+  "maxMoves": 16,
   "mechanics": ["laser"],
-  "hint": "Avoid the red laser beam! Go around it.",
+  "hint": "Red laser kills! Go around carefully.",
   "grid": [
     "##########",
-    "#@.......#",
-    "#........#",
-    "#...L....#",
-    "#........#",
-    "#.......G#",
+    "#@...#...#",
+    "#....#...#",
+    "#..L.#...#",
+    "#....#..G#",
     "##########"
   ]
 }

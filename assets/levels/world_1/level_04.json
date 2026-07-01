@@ -2,16 +2,16 @@
   "id": 104,
   "name": "Push It",
   "world": 1,
-  "maxMoves": 30,
+  "maxMoves": 22,
   "mechanics": ["sokoban"],
-  "hint": "Push the box (B) onto the goal (G).",
+  "hint": "Push box (B) to goal (G). Don't trap the box!",
   "grid": [
     "##########",
     "#@.......#",
-    "#..B.....#",
+    "#..###...#",
+    "#..#B....#",
+    "#..###..G#",
     "#........#",
-    "#........#",
-    "#.......G#",
     "##########"
   ]
 }

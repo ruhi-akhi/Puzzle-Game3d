@@ -2,14 +2,14 @@
   "id": 301,
   "name": "Slippery",
   "world": 3,
-  "maxMoves": 15,
+  "maxMoves": 12,
   "mechanics": ["ice"],
-  "hint": "Ice tiles (I) make you slide until you hit a wall!",
+  "hint": "Ice (I) slides until wall. Plan ahead!",
   "grid": [
     "##########",
     "#@.......#",
     "#.IIII...#",
-    "#........#",
+    "#.....I..#",
     "#.......G#",
     "##########"
   ]

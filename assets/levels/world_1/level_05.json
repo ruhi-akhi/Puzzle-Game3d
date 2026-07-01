@@ -2,15 +2,15 @@
   "id": 105,
   "name": "Double Push",
   "world": 1,
-  "maxMoves": 35,
+  "maxMoves": 28,
   "mechanics": ["sokoban"],
-  "hint": "Push both boxes onto the goals. Plan your moves!",
+  "hint": "Two boxes, two goals. Order matters!",
   "grid": [
     "##########",
     "#@..B....#",
-    "#........#",
-    "#..B.....#",
-    "#...G....#",
+    "#.###....#",
+    "#...#..B.#",
+    "#.###..#G#",
     "#.....G..#",
     "##########"
   ]

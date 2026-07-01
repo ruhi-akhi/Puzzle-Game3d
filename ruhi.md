@@ -11,6 +11,8 @@
 cd "e:\Puzzle Game3d"
 flutter pub get
 flutter test
+flutter run dela 1,2,3 capla game ta run hoba 
+
 flutter run -d chrome     # Web (works without Developer Mode)
 flutter run -d windows    # PC (requires Windows Developer Mode)
 ```

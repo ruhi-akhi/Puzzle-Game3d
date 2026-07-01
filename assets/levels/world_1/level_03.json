@@ -2,16 +2,15 @@
   "id": 103,
   "name": "Locked Door",
   "world": 1,
-  "maxMoves": 25,
+  "maxMoves": 20,
   "mechanics": ["key_door"],
-  "hint": "Get the key, then pass through the door (D).",
+  "hint": "Get key, pass door (D), avoid dead ends.",
   "grid": [
     "##########",
-    "#@..K....#",
-    "#.###.D..#",
-    "#...#....#",
-    "#.###....#",
-    "#.......G#",
+    "#@..#....#",
+    "#..K#..D.#",
+    "#.###..#.#",
+    "#......#G#",
     "##########"
   ]
 }
