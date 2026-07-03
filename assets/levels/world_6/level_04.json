@@ -1,0 +1,18 @@
+{
+  "id": 604,
+  "name": "Frozen Echoes",
+  "world": 6,
+  "maxMoves": 28,
+  "mechanics": ["ice", "clone"],
+  "hint": "Clones do not slide on ice. Use this difference in speed to solve the puzzle.",
+  "grid": [
+    "############",
+    "#@.I.I.I.I.#",
+    "#.I#I#I#I#.#",
+    "#..I.I.I.I.#",
+    "#.I#I#I#I#.#",
+    "#..I.I.I.I.#",
+    "#.I#I#I#I#G#",
+    "############"
+  ]
+}

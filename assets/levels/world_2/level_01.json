@@ -2,15 +2,15 @@
   "id": 201,
   "name": "Laser Intro",
   "world": 2,
-  "maxMoves": 16,
+  "maxMoves": 18,
   "mechanics": ["laser"],
-  "hint": "Red laser kills! Go around carefully.",
+  "hint": "Laser shoots RIGHT (red beam). Walk BELOW it to reach the goal!",
   "grid": [
     "##########",
-    "#@...#...#",
-    "#....#...#",
-    "#..L.#...#",
-    "#....#..G#",
+    "#@.......#",
+    "#...L....#",
+    "#........#",
+    "#.......G#",
     "##########"
   ]
 }

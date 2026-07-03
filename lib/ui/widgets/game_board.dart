@@ -11,11 +11,13 @@ import '../widgets/neon_button.dart';
 class GameBoard extends StatefulWidget {
   final GameEngine engine;
   final VoidCallback onStateChanged;
+  final String? hint;
 
   const GameBoard({
     super.key,
     required this.engine,
     required this.onStateChanged,
+    this.hint,
   });
 
   @override
@@ -31,7 +33,8 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
   double _displayPlayerY = 0;
   double _fromX = 0;
   double _fromY = 0;
-  double _boardTilt = 0;
+  double _boardTiltX = 0;
+  double _boardTiltY = 0;
 
   @override
   void initState() {
@@ -90,13 +93,25 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
       _fromY = beforeY.toDouble();
       _moveController.forward(from: 0);
 
-      final tilt = switch (dir) {
-        Direction.up => -0.08,
-        Direction.down => 0.08,
-        Direction.left => -0.06,
-        Direction.right => 0.06,
-      };
-      _boardTilt = tilt;
+      double tiltX = 0;
+      double tiltY = 0;
+      switch (dir) {
+        case Direction.up:
+          tiltX = -0.08;
+          break;
+        case Direction.down:
+          tiltX = 0.08;
+          break;
+        case Direction.left:
+          tiltY = -0.08;
+          break;
+        case Direction.right:
+          tiltY = 0.08;
+          break;
+      }
+      _boardTiltX = tiltX;
+      _boardTiltY = tiltY;
+      
       _tiltController.forward(from: 0).then((_) {
         if (mounted) {
           _tiltController.reverse();
@@ -137,7 +152,8 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
     final state = widget.engine.state;
     final screenSize = MediaQuery.of(context).size;
     final tileSize = _calculateTileSize(screenSize, state.width, state.height);
-    final tiltAnim = _tiltController.value * _boardTilt;
+    final tiltAnimX = _tiltController.value * _boardTiltX;
+    final tiltAnimY = _tiltController.value * _boardTiltY;
 
     return Focus(
       autofocus: true,
@@ -145,6 +161,18 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
       child: Column(
         children: [
           _buildHud(state),
+          if (widget.hint != null && widget.hint!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Text(
+                '💡 ${widget.hint}',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: GameColors.key.withOpacity(0.9),
+                  fontSize: 12,
+                ),
+              ),
+            ),
           Expanded(
             child: Center(
               child: AnimatedBuilder(
@@ -152,8 +180,8 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
                 builder: (context, _) {
                   final matrix = Matrix4.identity()
                     ..setEntry(3, 2, 0.0012)
-                    ..rotateX(0.18 + tiltAnim)
-                    ..rotateY(tiltAnim * 0.5);
+                    ..rotateX(0.18 + tiltAnimX)
+                    ..rotateY(tiltAnimY);
 
                   return Transform(
                     transform: matrix,
@@ -181,7 +209,7 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
                           animationPhase: _glowController.value,
                           displayPlayerX: _displayPlayerX,
                           displayPlayerY: _displayPlayerY,
-                          boardTilt: tiltAnim.abs(),
+                          boardTilt: tiltAnimX.abs() + tiltAnimY.abs(),
                         ),
                       ),
                     ),

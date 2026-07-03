@@ -4,13 +4,13 @@
   "world": 2,
   "maxMoves": 20,
   "mechanics": ["laser", "mirror"],
-  "hint": "Mirror (/) bends laser. Find safe path.",
+  "hint": "Stay on row 3 or 4 — avoid the laser on row 2!",
   "grid": [
     "##########",
     "#@.......#",
     "#...L..../#",
-    "#...#....#",
-    "#.../...G#",
+    "#........#",
+    "#.......G#",
     "##########"
   ]
 }

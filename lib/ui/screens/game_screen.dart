@@ -32,6 +32,7 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void initState() {
     super.initState();
+    LevelLoader.clearCache();
     _engine = GameEngine(level: widget.level);
   }
 
@@ -201,6 +202,7 @@ class _GameScreenState extends State<GameScreen> {
       body: GameBoard(
         engine: _engine,
         onStateChanged: _onStateChanged,
+        hint: widget.level.hint,
       ),
     );
   }

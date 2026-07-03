@@ -148,6 +148,24 @@ void main() {
       engine.move(Direction.down);
       expect(engine.calculateStars(), greaterThan(0));
     });
+    test('laser intro level is solvable', () {
+      const laserLevel = LevelData(
+        id: 201,
+        name: 'Laser Intro',
+        world: 2,
+        maxMoves: 18,
+        mechanics: ['laser'],
+        grid: [
+          '##########',
+          '#@.......#',
+          '#...L....#',
+          '#........#',
+          '#.......G#',
+          '##########',
+        ],
+      );
+      expect(_canWinLevel(laserLevel), isTrue);
+    });
   });
 
   group('LevelData', () {
@@ -171,5 +189,33 @@ void main() {
       expect(ProgressService.levelId(1, 5), 105);
       expect(ProgressService.levelId(2, 1), 201);
     });
+
+    test('normalize legacy level ids', () {
+      expect(ProgressService.levelId(1, 5), 105);
+    });
   });
+}
+
+bool _canWinLevel(LevelData level) {
+  final engine = GameEngine(level: level);
+  return _bfs(engine, <String>{});
+}
+
+bool _bfs(GameEngine engine, Set<String> visited) {
+  if (engine.state.status == GameStatus.won) return true;
+  if (engine.state.status == GameStatus.lost) return false;
+
+  final key =
+      '${engine.state.playerX},${engine.state.playerY},${engine.state.movesUsed},${engine.state.status}';
+  if (visited.contains(key)) return false;
+  visited.add(key);
+
+  for (final dir in Direction.values) {
+    final copy = GameEngine(level: engine.level);
+    copy.state = engine.state.copy();
+    if (copy.move(dir) && copy.state.status != GameStatus.lost) {
+      if (_bfs(copy, visited)) return true;
+    }
+  }
+  return false;
 }

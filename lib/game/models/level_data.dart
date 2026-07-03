@@ -104,6 +104,6 @@ const List<WorldInfo> worlds = [
     name: 'Final Mix',
     description: 'All mechanics combined',
     mechanic: 'Mixed Puzzles',
-    levelCount: 2,
+    levelCount: 5,
   ),
 ];

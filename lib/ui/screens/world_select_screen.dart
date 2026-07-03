@@ -12,10 +12,34 @@ class WorldSelectScreen extends StatefulWidget {
 }
 
 class _WorldSelectScreenState extends State<WorldSelectScreen> {
+  Map<int, bool> _unlocked = {};
+  Map<int, int> _completed = {};
+  bool _loading = true;
+
   @override
   void initState() {
     super.initState();
-    ProgressService.syncFromStars();
+    _loadAll();
+  }
+
+  Future<void> _loadAll() async {
+    await ProgressService.syncFromStars();
+
+    final unlocked = <int, bool>{};
+    final completed = <int, int>{};
+
+    for (final world in worlds) {
+      unlocked[world.id] = await ProgressService.isWorldUnlocked(world.id);
+      completed[world.id] = await ProgressService.getWorldCompletedCount(world.id);
+    }
+
+    if (mounted) {
+      setState(() {
+        _unlocked = unlocked;
+        _completed = completed;
+        _loading = false;
+      });
+    }
   }
 
   @override
@@ -38,52 +62,59 @@ class _WorldSelectScreenState extends State<WorldSelectScreen> {
         ),
         centerTitle: true,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: worlds.length,
-        itemBuilder: (context, index) {
-          final world = worlds[index];
-          return _WorldCard(
-            key: ValueKey('world_${world.id}'),
-            world: world,
-          );
-        },
-      ),
+      body: _loading
+          ? const Center(
+              child: CircularProgressIndicator(color: GameColors.neonCyan),
+            )
+          : RefreshIndicator(
+              color: GameColors.neonCyan,
+              onRefresh: _loadAll,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: worlds.length,
+                itemBuilder: (context, index) {
+                  final world = worlds[index];
+                  final unlocked = _unlocked[world.id] ?? false;
+                  final count = _completed[world.id] ?? 0;
+
+                  return _WorldCard(
+                    world: world,
+                    unlocked: unlocked,
+                    completedCount: count,
+                    onTap: unlocked
+                        ? () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => LevelSelectScreen(world: world),
+                              ),
+                            );
+                            _loadAll();
+                          }
+                        : null,
+                  );
+                },
+              ),
+            ),
     );
   }
 }
 
-class _WorldCard extends StatefulWidget {
+class _WorldCard extends StatelessWidget {
   final WorldInfo world;
-  const _WorldCard({super.key, required this.world});
+  final bool unlocked;
+  final int completedCount;
+  final VoidCallback? onTap;
 
-  @override
-  State<_WorldCard> createState() => _WorldCardState();
-}
-
-class _WorldCardState extends State<_WorldCard> {
-  bool _unlocked = false;
-  int _completedCount = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    ProgressService.syncFromStars().then((_) => _refresh());
-  }
-
-  Future<void> _refresh() async {
-    final unlocked = await ProgressService.isWorldUnlocked(widget.world.id);
-    final count = await ProgressService.getWorldCompletedCount(widget.world.id);
-    if (mounted) {
-      setState(() {
-        _unlocked = unlocked;
-        _completedCount = count;
-      });
-    }
-  }
+  const _WorldCard({
+    required this.world,
+    required this.unlocked,
+    required this.completedCount,
+    this.onTap,
+  });
 
   Color get _worldColor {
-    switch (widget.world.id) {
+    switch (world.id) {
       case 1:
         return GameColors.neonCyan;
       case 2:
@@ -104,32 +135,22 @@ class _WorldCardState extends State<_WorldCard> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GestureDetector(
-        onTap: _unlocked
-            ? () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => LevelSelectScreen(world: widget.world),
-                  ),
-                );
-                _refresh();
-              }
-            : null,
+        onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 400),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: _unlocked
+            color: unlocked
                 ? _worldColor.withOpacity(0.08)
                 : Colors.white.withOpacity(0.03),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: _unlocked
+              color: unlocked
                   ? _worldColor.withOpacity(0.5)
                   : Colors.white.withOpacity(0.1),
               width: 2,
             ),
-            boxShadow: _unlocked
+            boxShadow: unlocked
                 ? [BoxShadow(color: _worldColor.withOpacity(0.2), blurRadius: 12)]
                 : null,
           ),
@@ -144,9 +165,9 @@ class _WorldCardState extends State<_WorldCard> {
                 ),
                 child: Center(
                   child: Text(
-                    '${widget.world.id}',
+                    '${world.id}',
                     style: TextStyle(
-                      color: _unlocked ? _worldColor : Colors.grey,
+                      color: unlocked ? _worldColor : Colors.grey,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
@@ -159,15 +180,15 @@ class _WorldCardState extends State<_WorldCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.world.name,
+                      world.name,
                       style: TextStyle(
-                        color: _unlocked ? GameColors.hudText : Colors.grey,
+                        color: unlocked ? GameColors.hudText : Colors.grey,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
-                      widget.world.mechanic,
+                      world.mechanic,
                       style: TextStyle(
                         color: _worldColor.withOpacity(0.8),
                         fontSize: 12,
@@ -175,9 +196,11 @@ class _WorldCardState extends State<_WorldCard> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$_completedCount / ${widget.world.levelCount} completed',
+                      '$completedCount / ${world.levelCount} completed',
                       style: TextStyle(
-                        color: GameColors.hudText.withOpacity(0.5),
+                        color: unlocked
+                            ? GameColors.doorOpen.withOpacity(0.8)
+                            : GameColors.hudText.withOpacity(0.5),
                         fontSize: 11,
                       ),
                     ),
@@ -185,8 +208,8 @@ class _WorldCardState extends State<_WorldCard> {
                 ),
               ),
               Icon(
-                _unlocked ? Icons.arrow_forward_ios : Icons.lock,
-                color: _unlocked ? _worldColor : Colors.grey,
+                unlocked ? Icons.arrow_forward_ios : Icons.lock,
+                color: unlocked ? _worldColor : Colors.grey,
                 size: 20,
               ),
             ],

@@ -1,0 +1,19 @@
+{
+  "id": 605,
+  "name": "Apocalypse Gate",
+  "world": 6,
+  "maxMoves": 45,
+  "mechanics": ["laser", "mirror", "switch", "key_door", "teleporter", "clone"],
+  "hint": "Use the teleporters and clones to hit switches while dodging lasers.",
+  "grid": [
+    "#############",
+    "#@......T.DG#",
+    "#.B#.#..#.##.#",
+    "#..#.S..#.K..#",
+    "#L..../.#..r.#",
+    "###.R.###.##.#",
+    "#...#...#.t..#",
+    "#.r.#.s.#....#",
+    "#############"
+  ]
+}
