@@ -2,16 +2,15 @@
   "id": 102,
   "name": "Key Hunt",
   "world": 1,
-  "maxMoves": 16,
+  "maxMoves": 18,
   "mechanics": ["key_door"],
-  "hint": "Long path — collect key (K) first, then reach goal.",
+  "hint": "Go RIGHT and DOWN to collect K, then reach G!",
   "grid": [
     "##########",
     "#@.......#",
-    "#.#####..#",
-    "#.#...#..#",
-    "#.#.K.#..#",
-    "#...#...G#",
+    "#....K...#",
+    "#........#",
+    "#.......G#",
     "##########"
   ]
 }

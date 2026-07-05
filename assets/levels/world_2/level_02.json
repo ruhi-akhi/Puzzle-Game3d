@@ -2,14 +2,14 @@
   "id": 202,
   "name": "Mirror Reflection",
   "world": 2,
-  "maxMoves": 20,
+  "maxMoves": 16,
   "mechanics": ["laser", "mirror"],
-  "hint": "Stay on row 3 or 4 — avoid the laser on row 2!",
+  "hint": "Mirror bends laser UP. Stay on bottom rows only!",
   "grid": [
     "##########",
     "#@.......#",
-    "#...L..../#",
-    "#........#",
+    "#...L.../#",
+    "#..###...#",
     "#.......G#",
     "##########"
   ]

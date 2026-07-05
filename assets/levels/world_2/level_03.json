@@ -2,14 +2,14 @@
   "id": 203,
   "name": "Switch & Laser",
   "world": 2,
-  "maxMoves": 20,
+  "maxMoves": 18,
   "mechanics": ["laser", "switch"],
-  "hint": "Step on R switch to open the red door (r), then reach the goal.",
+  "hint": "R opens door r. Laser blocks top path — go below!",
   "grid": [
     "##########",
     "#@..R....#",
     "#..r.....#",
-    "#........#",
+    "#...L....#",
     "#.......G#",
     "##########"
   ]

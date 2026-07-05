@@ -4,7 +4,7 @@
   "world": 1,
   "maxMoves": 20,
   "mechanics": ["key_door"],
-  "hint": "Get key, pass door (D), avoid dead ends.",
+  "hint": "Key → Door (D) → Goal. No wasted steps!",
   "grid": [
     "##########",
     "#@..#....#",

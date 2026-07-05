@@ -109,9 +109,8 @@ class GameEngine {
     state.playerX = nx;
     state.playerY = ny;
 
-    // Ice sliding
-    if (state.tileAt(nx, ny) == TileType.ice ||
-        level.mechanics.contains('ice')) {
+    // Ice sliding — only when standing on an ice tile
+    if (state.tileAt(state.playerX, state.playerY) == TileType.ice) {
       _slideOnIce(dir);
     }
 

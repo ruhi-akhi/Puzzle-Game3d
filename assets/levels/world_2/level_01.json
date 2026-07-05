@@ -2,14 +2,14 @@
   "id": 201,
   "name": "Laser Intro",
   "world": 2,
-  "maxMoves": 18,
+  "maxMoves": 14,
   "mechanics": ["laser"],
-  "hint": "Laser shoots RIGHT (red beam). Walk BELOW it to reach the goal!",
+  "hint": "Laser row 2 kills! Go below the wall gap to reach goal.",
   "grid": [
     "##########",
     "#@.......#",
     "#...L....#",
-    "#........#",
+    "#..###...#",
     "#.......G#",
     "##########"
   ]

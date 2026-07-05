@@ -2,15 +2,14 @@
   "id": 101,
   "name": "First Steps",
   "world": 1,
-  "maxMoves": 15,
+  "maxMoves": 14,
   "mechanics": ["movement"],
-  "hint": "Use arrow keys to reach the goal (G).",
+  "hint": "Follow the path — reach the glowing goal (G)!",
   "grid": [
     "##########",
     "#@.......#",
-    "#........#",
-    "#........#",
-    "#........#",
+    "#....#...#",
+    "#....#...#",
     "#.......G#",
     "##########"
   ]

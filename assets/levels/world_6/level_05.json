@@ -2,18 +2,18 @@
   "id": 605,
   "name": "Apocalypse Gate",
   "world": 6,
-  "maxMoves": 45,
-  "mechanics": ["laser", "mirror", "switch", "key_door", "teleporter", "clone"],
-  "hint": "Use the teleporters and clones to hit switches while dodging lasers.",
+  "maxMoves": 24,
+  "mechanics": ["laser", "switch", "key_door", "teleporter"],
+  "hint": "1) Step on T to teleport past laser  2) Hit R  3) Get K  4) Open D → G",
   "grid": [
-    "#############",
-    "#@......T.DG#",
-    "#.B#.#..#.##.#",
-    "#..#.S..#.K..#",
-    "#L..../.#..r.#",
-    "###.R.###.##.#",
-    "#...#...#.t..#",
-    "#.r.#.s.#....#",
-    "#############"
+    "##########",
+    "#@..T....#",
+    "#.##.....#",
+    "#...L....#",
+    "#......t.#",
+    "#..R.r...#",
+    "#...K....#",
+    "#....D.G.#",
+    "##########"
   ]
 }

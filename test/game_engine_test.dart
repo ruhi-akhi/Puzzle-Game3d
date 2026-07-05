@@ -148,23 +148,26 @@ void main() {
       engine.move(Direction.down);
       expect(engine.calculateStars(), greaterThan(0));
     });
-    test('laser intro level is solvable', () {
-      const laserLevel = LevelData(
-        id: 201,
-        name: 'Laser Intro',
-        world: 2,
-        maxMoves: 18,
-        mechanics: ['laser'],
+    test('apocalypse gate is solvable', () {
+      const level = LevelData(
+        id: 605,
+        name: 'Apocalypse Gate',
+        world: 6,
+        maxMoves: 24,
+        mechanics: ['laser', 'switch', 'key_door', 'teleporter'],
         grid: [
           '##########',
-          '#@.......#',
+          '#@..T....#',
+          '#.##.....#',
           '#...L....#',
-          '#........#',
-          '#.......G#',
+          '#......t.#',
+          '#..R.r...#',
+          '#...K....#',
+          '#....D.G.#',
           '##########',
         ],
       );
-      expect(_canWinLevel(laserLevel), isTrue);
+      expect(_canWinLevel(level), isTrue);
     });
   });
 

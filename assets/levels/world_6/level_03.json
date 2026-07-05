@@ -2,18 +2,16 @@
   "id": 603,
   "name": "Mirror Maze",
   "world": 6,
-  "maxMoves": 36,
-  "mechanics": ["laser", "mirror", "switch", "key_door"],
-  "hint": "Redirect the laser or block it to reach the key and open the door.",
+  "maxMoves": 22,
+  "mechanics": ["laser", "mirror", "switch"],
+  "hint": "Laser row 2 kills! Go around below, hit R to open door r.",
   "grid": [
-    "###########",
-    "#@......#G#",
-    "#.B..##.D.#",
-    "#L.../.#.#",
-    "###.S.#.s.#",
-    "#...#.#.#.#",
-    "#.s.#.K.#.#",
-    "#...#.###.#",
-    "###########"
+    "##########",
+    "#@.......#",
+    "#...L..../#",
+    "#........#",
+    "#..R.r...#",
+    "#.......G#",
+    "##########"
   ]
 }

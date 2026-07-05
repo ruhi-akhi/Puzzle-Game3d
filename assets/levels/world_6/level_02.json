@@ -2,9 +2,9 @@
   "id": 602,
   "name": "Final Challenge",
   "world": 6,
-  "maxMoves": 35,
+  "maxMoves": 28,
   "mechanics": ["key_door", "sokoban", "switch"],
-  "hint": "Combine everything you've learned!",
+  "hint": "1) Get K  2) Hit R (opens r)  3) Push B onto G  4) Stand on G!",
   "grid": [
     "##########",
     "#@..K..R.#",
