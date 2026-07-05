@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../game/models/game_state.dart';
 import '../../game/models/level_data.dart' show LevelData, worlds;
 import '../../game/services/level_loader.dart';
@@ -7,7 +8,8 @@ import '../../game/services/progress_service.dart';
 import '../../game/systems/game_engine.dart';
 import '../../theme/game_colors.dart';
 import '../widgets/game_board.dart';
-import '../widgets/neon_button.dart';
+import '../widgets/scifi_background.dart';
+import '../widgets/level_intro_dialog.dart';
 
 class GameScreen extends StatefulWidget {
   final LevelData level;
@@ -33,6 +35,66 @@ class _GameScreenState extends State<GameScreen> {
   void initState() {
     super.initState();
     _engine = GameEngine(level: widget.level);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showLevelIntro());
+  }
+
+  Future<void> _showLevelIntro() async {
+    if (!mounted) return;
+    final hint = widget.level.hint ?? '';
+    if (hint.isEmpty) return;
+    await showLevelIntroDialog(
+      context,
+      world: widget.world,
+      level: widget.levelIndex,
+      levelName: widget.level.name,
+      hint: hint,
+    );
+  }
+
+  void _showHint() {
+    final hint = widget.level.hint ?? '';
+    if (hint.isEmpty) return;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF111827),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: GameColors.key.withOpacity(0.4)),
+        ),
+        title: Row(
+          children: [
+            const Text('💡', style: TextStyle(fontSize: 22)),
+            const SizedBox(width: 8),
+            Text(
+              'HINT',
+              style: GoogleFonts.orbitron(
+                color: GameColors.key,
+                fontSize: 18,
+                letterSpacing: 2,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          hint,
+          style: GoogleFonts.exo2(
+            color: GameColors.hudText,
+            fontSize: 15,
+            height: 1.45,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'GOT IT',
+              style: GoogleFonts.orbitron(color: GameColors.neonCyan),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _onStateChanged() {
@@ -50,6 +112,7 @@ class _GameScreenState extends State<GameScreen> {
 
     if (status == GameStatus.won) {
       AudioService.playWin();
+      AudioService.hapticWin();
       final stars = _engine.calculateStars();
       await ProgressService.markLevelComplete(widget.level.id);
       await ProgressService.setStars(widget.level.id, stars);
@@ -60,24 +123,43 @@ class _GameScreenState extends State<GameScreen> {
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
           backgroundColor: const Color(0xFF1A2332),
-          title: const Text(
-            '🎉 LEVEL COMPLETE!',
-            style: TextStyle(color: GameColors.doorOpen),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: GameColors.doorOpen.withOpacity(0.5)),
+          ),
+          title: Text(
+            'LEVEL COMPLETE!',
+            style: GoogleFonts.orbitron(
+              color: GameColors.doorOpen,
+              fontSize: 20,
+              letterSpacing: 2,
+            ),
             textAlign: TextAlign.center,
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '⭐' * stars + '☆' * (3 - stars),
-                style: const TextStyle(fontSize: 32),
+                '★' * stars + '☆' * (3 - stars),
+                style: const TextStyle(fontSize: 36, color: GameColors.key),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 'Moves: ${_engine.state.movesUsed} / ${_engine.state.maxMoves}',
-                style: const TextStyle(color: Colors.white70),
+                style: GoogleFonts.exo2(color: Colors.white70, fontSize: 15),
               ),
+              if (stars < 3)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    'Replay for more stars!',
+                    style: GoogleFonts.exo2(
+                      color: GameColors.neonCyan.withOpacity(0.7),
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
             ],
           ),
           actions: [
@@ -86,31 +168,32 @@ class _GameScreenState extends State<GameScreen> {
                 Navigator.pop(ctx);
                 _restart();
               },
-              child: const Text('RETRY', style: TextStyle(color: GameColors.hudText)),
+              child: Text('RETRY', style: GoogleFonts.orbitron(color: GameColors.hudText)),
             ),
             TextButton(
               onPressed: () async {
                 Navigator.pop(ctx);
                 await _goToNextLevel();
               },
-              child: const Text('NEXT', style: TextStyle(color: GameColors.neonCyan)),
+              child: Text('NEXT', style: GoogleFonts.orbitron(color: GameColors.neonCyan)),
             ),
           ],
         ),
       );
     } else if (status == GameStatus.lost) {
+      AudioService.hapticBlock();
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: const Color(0xFF1A2332),
-          title: const Text(
-            '💀 OUT OF MOVES',
-            style: TextStyle(color: GameColors.laser),
+          title: Text(
+            'OUT OF MOVES',
+            style: GoogleFonts.orbitron(color: GameColors.laser, letterSpacing: 2),
             textAlign: TextAlign.center,
           ),
-          content: const Text(
-            'You ran out of moves. Try again!',
-            style: TextStyle(color: Colors.white70),
+          content: Text(
+            'You ran out of moves. Tap HINT or try again!',
+            style: GoogleFonts.exo2(color: Colors.white70),
             textAlign: TextAlign.center,
           ),
           actions: [
@@ -119,14 +202,21 @@ class _GameScreenState extends State<GameScreen> {
                 Navigator.pop(ctx);
                 Navigator.pop(context);
               },
-              child: const Text('QUIT', style: TextStyle(color: GameColors.hudText)),
+              child: Text('QUIT', style: GoogleFonts.orbitron(color: GameColors.hudText)),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                _showHint();
+              },
+              child: Text('HINT', style: GoogleFonts.orbitron(color: GameColors.key)),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(ctx);
                 _restart();
               },
-              child: const Text('RETRY', style: TextStyle(color: GameColors.neonCyan)),
+              child: Text('RETRY', style: GoogleFonts.orbitron(color: GameColors.neonCyan)),
             ),
           ],
         ),
@@ -167,22 +257,31 @@ class _GameScreenState extends State<GameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.black.withOpacity(0.25),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: GameColors.neonCyan),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'WORLD ${widget.world} - ${widget.levelIndex}',
-          style: const TextStyle(
-            color: GameColors.neonCyan,
-            fontSize: 14,
-            letterSpacing: 2,
+          'ECHO LABYRINTH',
+          style: GoogleFonts.orbitron(
+            color: GameColors.neonCyan.withOpacity(0.7),
+            fontSize: 12,
+            letterSpacing: 3,
           ),
         ),
+        centerTitle: true,
         actions: [
+          if ((widget.level.hint ?? '').isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.lightbulb_outline, color: GameColors.key),
+              onPressed: _showHint,
+              tooltip: 'Hint',
+            ),
           IconButton(
             icon: const Icon(Icons.refresh, color: GameColors.neonPink),
             onPressed: _restart,
@@ -198,10 +297,15 @@ class _GameScreenState extends State<GameScreen> {
           ),
         ],
       ),
-      body: GameBoard(
-        engine: _engine,
-        onStateChanged: _onStateChanged,
-        hint: widget.level.hint,
+      body: SciFiBackground(
+        child: SafeArea(
+          child: GameBoard(
+            engine: _engine,
+            onStateChanged: _onStateChanged,
+            world: widget.world,
+            levelIndex: widget.levelIndex,
+          ),
+        ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 class AudioService {
   static final AudioPlayer _bgm = AudioPlayer();
@@ -51,6 +52,40 @@ class AudioService {
       await _sfx.stop();
       await _sfx.play(AssetSource('audio/win.wav'));
     } catch (_) {}
+  }
+
+  static Future<void> playBlock() async {
+    if (!_initialized || !sfxEnabled) return;
+    try {
+      await _sfx.stop();
+      await _sfx.play(AssetSource('audio/move.wav'));
+      await _sfx.setVolume(0.25);
+      await Future.delayed(const Duration(milliseconds: 80));
+      await _sfx.setVolume(0.5);
+    } catch (_) {}
+  }
+
+  static Future<void> playCollect() async {
+    if (!_initialized || !sfxEnabled) return;
+    try {
+      await _sfx.stop();
+      await _sfx.play(AssetSource('audio/win.wav'));
+      await _sfx.setVolume(0.3);
+      await Future.delayed(const Duration(milliseconds: 120));
+      await _sfx.setVolume(0.5);
+    } catch (_) {}
+  }
+
+  static void hapticMove() {
+    HapticFeedback.lightImpact();
+  }
+
+  static void hapticBlock() {
+    HapticFeedback.mediumImpact();
+  }
+
+  static void hapticWin() {
+    HapticFeedback.heavyImpact();
   }
 
   static Future<void> toggleMusic() async {

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../models/game_state.dart';
@@ -48,6 +49,9 @@ class GamePainter extends CustomPainter {
     this.displayPlayerX = -1,
     this.displayPlayerY = -1,
   });
+
+  double get _pulse => 0.5 + 0.5 * math.sin(animationPhase * math.pi * 2);
+  double get _pulseFast => 0.5 + 0.5 * math.sin(animationPhase * math.pi * 4);
 
   double get _playerX => displayPlayerX >= 0 ? displayPlayerX : state.playerX.toDouble();
   double get _playerY => displayPlayerY >= 0 ? displayPlayerY : state.playerY.toDouble();
@@ -104,18 +108,20 @@ class GamePainter extends CustomPainter {
           RRect.fromRectAndRadius(rect, const Radius.circular(4)),
           paint,
         );
-        _drawGlow(canvas, rect, GameColors.wallGlow, 0.3);
+        _drawPulsingGlow(canvas, rect, GameColors.wallGlow, base: 0.15, range: 0.2);
       case TileType.floor:
       case TileType.empty:
         paint.color = GameColors.floor;
         canvas.drawRect(rect, paint);
+        paint.color = GameColors.neonCyan.withOpacity(0.02 + 0.02 * _pulse);
+        canvas.drawRect(rect.deflate(tileSize * 0.35), paint);
       case TileType.door:
         paint.color = GameColors.door;
         canvas.drawRRect(
           RRect.fromRectAndRadius(rect, const Radius.circular(4)),
           paint,
         );
-        _drawGlow(canvas, rect, GameColors.door, 0.5);
+        _drawPulsingGlow(canvas, rect, GameColors.door, base: 0.35, range: 0.3);
       case TileType.doorOpen:
         paint.color = GameColors.doorOpen;
         canvas.drawRRect(
@@ -132,7 +138,7 @@ class GamePainter extends CustomPainter {
           RRect.fromRectAndRadius(rect, const Radius.circular(6)),
           paint,
         );
-        _drawGlow(canvas, rect, GameColors.neonPurple, 0.4);
+        _drawPulsingGlow(canvas, rect, GameColors.neonPurple, base: 0.25, range: 0.35);
       case TileType.goal:
         paint.color = GameColors.floor;
         canvas.drawRect(rect, paint);
@@ -153,7 +159,7 @@ class GamePainter extends CustomPainter {
       case TileType.laserBeam:
         paint.color = GameColors.laser;
         canvas.drawRect(rect, paint);
-        _drawGlow(canvas, rect, GameColors.laserGlow, 0.6);
+        _drawPulsingGlow(canvas, rect, GameColors.laserGlow, base: 0.45, range: 0.45, blur: 10);
       case TileType.redSwitch:
         paint.color = GameColors.floor;
         canvas.drawRect(rect, paint);
@@ -222,6 +228,23 @@ class GamePainter extends CustomPainter {
     );
   }
 
+  void _drawPulsingGlow(
+    Canvas canvas,
+    Rect rect,
+    Color color, {
+    double base = 0.35,
+    double range = 0.35,
+    double blur = 8,
+  }) {
+    final glowPaint = Paint()
+      ..color = color.withOpacity(base + range * _pulse)
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur + 2 * _pulse);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect.inflate(2 + _pulse * 2), const Radius.circular(4)),
+      glowPaint,
+    );
+  }
+
   void _drawPlayerShadow(Canvas canvas, double x, double y) {
     final center = Offset(
       x * tileSize + tileSize / 2,
@@ -241,13 +264,18 @@ class GamePainter extends CustomPainter {
       x * tileSize + tileSize / 2,
       y * tileSize + tileSize / 2,
     );
-    final pulse = 1.0 + 0.05 * (animationPhase % 1.0);
+    final pulse = 1.0 + 0.08 * _pulseFast;
     final radius = tileSize * 0.32 * pulse;
 
     final glowPaint = Paint()
-      ..color = GameColors.playerGlow
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
-    canvas.drawCircle(center, radius + 4, glowPaint);
+      ..color = GameColors.playerGlow.withOpacity(0.5 + 0.4 * _pulse)
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 10 + 6 * _pulse);
+    canvas.drawCircle(center, radius + 6 + 2 * _pulse, glowPaint);
+
+    final outerGlow = Paint()
+      ..color = GameColors.player.withOpacity(0.15 + 0.15 * _pulse)
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 16);
+    canvas.drawCircle(center, radius + 10, outerGlow);
 
     final paint = Paint()..color = GameColors.player;
     canvas.drawCircle(center, radius, paint);
@@ -288,18 +316,19 @@ class GamePainter extends CustomPainter {
       ),
       paint,
     );
-    _drawGlow(canvas, rect, GameColors.key, 0.5);
+    _drawPulsingGlow(canvas, rect, GameColors.key, base: 0.4, range: 0.45);
   }
 
   void _drawGoal(Canvas canvas, Rect rect) {
     final paint = Paint()
-      ..color = GameColors.goal.withOpacity(0.4 + 0.2 * (animationPhase % 1.0))
+      ..color = GameColors.goal.withOpacity(0.35 + 0.35 * _pulse)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
+      ..strokeWidth = 2 + _pulse;
     canvas.drawRRect(
       RRect.fromRectAndRadius(rect.deflate(4), const Radius.circular(4)),
       paint,
     );
+    _drawPulsingGlow(canvas, rect, GameColors.goal, base: 0.1, range: 0.25, blur: 6);
   }
 
   void _drawMirror(Canvas canvas, Rect rect, bool slash) {
@@ -317,15 +346,15 @@ class GamePainter extends CustomPainter {
 
   void _drawLaserEmitter(Canvas canvas, Rect rect) {
     final paint = Paint()..color = GameColors.laser;
-    canvas.drawCircle(rect.center, tileSize * 0.2, paint);
-    _drawGlow(canvas, rect, GameColors.laser, 0.7);
+    canvas.drawCircle(rect.center, tileSize * 0.2 * (1 + 0.06 * _pulseFast), paint);
+    _drawPulsingGlow(canvas, rect, GameColors.laser, base: 0.5, range: 0.45, blur: 12);
   }
 
   void _drawSwitch(Canvas canvas, Rect rect, Color color, bool isOn) {
     final paint = Paint()
       ..color = isOn ? color : color.withOpacity(0.4);
     canvas.drawCircle(rect.center, tileSize * 0.2, paint);
-    if (isOn) _drawGlow(canvas, rect, color, 0.6);
+    if (isOn) _drawPulsingGlow(canvas, rect, color, base: 0.4, range: 0.4);
   }
 
   void _drawTeleporter(Canvas canvas, Rect rect) {

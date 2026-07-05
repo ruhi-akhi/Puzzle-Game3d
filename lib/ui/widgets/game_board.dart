@@ -1,23 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
 import '../../game/models/tile_type.dart';
 import '../../game/services/audio_service.dart';
 import '../../game/systems/game_engine.dart';
 import '../../game/rendering/game_painter.dart';
 import '../../theme/game_colors.dart';
-import '../widgets/neon_button.dart';
+import 'direction_pad.dart';
 
 class GameBoard extends StatefulWidget {
   final GameEngine engine;
   final VoidCallback onStateChanged;
-  final String? hint;
+  final int world;
+  final int levelIndex;
 
   const GameBoard({
     super.key,
     required this.engine,
     required this.onStateChanged,
-    this.hint,
+    required this.world,
+    required this.levelIndex,
   });
 
   @override
@@ -77,14 +80,23 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
   void _handleMove(Direction dir) {
     final beforeX = widget.engine.state.playerX;
     final beforeY = widget.engine.state.playerY;
+    final hadKeyBefore = widget.engine.state.hasKey;
 
     if (widget.engine.move(dir)) {
       AudioService.playMove();
+      AudioService.hapticMove();
+      if (!hadKeyBefore && widget.engine.state.hasKey) {
+        AudioService.playCollect();
+        HapticFeedback.mediumImpact();
+      }
       _fromX = beforeX.toDouble();
       _fromY = beforeY.toDouble();
       _moveController.forward(from: 0);
       widget.onStateChanged();
       setState(() {});
+    } else {
+      AudioService.playBlock();
+      AudioService.hapticBlock();
     }
   }
 
@@ -112,6 +124,14 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
     }
   }
 
+  int _projectedStars(int movesUsed, int maxMoves) {
+    if (movesUsed == 0) return 3;
+    final ratio = movesUsed / maxMoves;
+    if (ratio <= 0.5) return 3;
+    if (ratio <= 0.75) return 2;
+    return 1;
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = widget.engine.state;
@@ -124,18 +144,6 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
       child: Column(
         children: [
           _buildHud(state),
-          if (widget.hint != null && widget.hint!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: Text(
-                '💡 ${widget.hint}',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: GameColors.key.withOpacity(0.9),
-                  fontSize: 12,
-                ),
-              ),
-            ),
           Expanded(
             child: Center(
               child: AnimatedBuilder(
@@ -143,30 +151,40 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
                 builder: (context, _) {
                   return Container(
                     decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: GameColors.neonCyan.withOpacity(
+                          0.15 + 0.08 * math.sin(_glowController.value * math.pi * 2),
+                        ),
+                        width: 1,
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: GameColors.neonCyan.withOpacity(
                             0.12 +
-                                0.06 *
+                                0.08 *
                                     math.sin(
                                         _glowController.value * math.pi * 2),
                           ),
-                          blurRadius: 24,
+                          blurRadius: 28,
                           spreadRadius: 1,
                         ),
                       ],
                     ),
-                    child: CustomPaint(
-                      size: Size(
-                        state.width * tileSize,
-                        state.height * tileSize,
-                      ),
-                      painter: GamePainter(
-                        state: state,
-                        tileSize: tileSize,
-                        animationPhase: _glowController.value,
-                        displayPlayerX: _displayPlayerX,
-                        displayPlayerY: _displayPlayerY,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: CustomPaint(
+                        size: Size(
+                          state.width * tileSize,
+                          state.height * tileSize,
+                        ),
+                        painter: GamePainter(
+                          state: state,
+                          tileSize: tileSize,
+                          animationPhase: _glowController.value,
+                          displayPlayerX: _displayPlayerX,
+                          displayPlayerY: _displayPlayerY,
+                        ),
                       ),
                     ),
                   );
@@ -174,15 +192,15 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
               ),
             ),
           ),
-          _buildControls(),
+          DirectionPad(onMove: _handleMove),
         ],
       ),
     );
   }
 
   double _calculateTileSize(Size screen, int gridW, int gridH) {
-    final maxW = screen.width * 0.9;
-    final maxH = screen.height * 0.55;
+    final maxW = screen.width * 0.92;
+    final maxH = screen.height * 0.58;
     final tileW = maxW / gridW;
     final tileH = maxH / gridH;
     return tileW < tileH ? tileW : tileH;
@@ -191,82 +209,105 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
   Widget _buildHud(dynamic state) {
     final movesLeft = state.maxMoves - state.movesUsed;
     final movesColor = movesLeft <= 5 ? GameColors.laser : GameColors.neonCyan;
+    final projected = _projectedStars(state.movesUsed, state.maxMoves);
+    final star3 = (state.maxMoves * 0.5).ceil();
+    final star2 = (state.maxMoves * 0.75).ceil();
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.35),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: GameColors.neonCyan.withOpacity(0.25), width: 1),
+      ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                state.levelName,
-                style: const TextStyle(
-                  color: GameColors.neonCyan,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'WORLD ${widget.world} — ${widget.levelIndex}',
+                  style: GoogleFonts.orbitron(
+                    color: GameColors.neonCyan.withOpacity(0.85),
+                    fontSize: 13,
+                    letterSpacing: 2,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              if (state.hasKey)
-                const Text(
-                  '🔑 Key Collected',
-                  style: TextStyle(color: GameColors.key, fontSize: 12),
+                const SizedBox(height: 2),
+                Text(
+                  state.levelName.toUpperCase(),
+                  style: GoogleFonts.orbitron(
+                    color: GameColors.hudText,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
                 ),
-            ],
-          ),
-          Text(
-            'MOVES: $movesLeft / ${state.maxMoves}',
-            style: TextStyle(
-              color: movesColor,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 2,
+                if (state.hasKey)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      '🔑 KEY COLLECTED',
+                      style: GoogleFonts.exo2(
+                        color: GameColors.key,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildControls() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          NeonButton(
-            label: '',
-            onPressed: () => _handleMove(Direction.up),
-            icon: Icons.keyboard_arrow_up,
-            small: true,
-            color: GameColors.neonCyan,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              NeonButton(
-                label: '',
-                onPressed: () => _handleMove(Direction.left),
-                icon: Icons.keyboard_arrow_left,
-                small: true,
-                color: GameColors.neonCyan,
+              Text(
+                'MOVES',
+                style: GoogleFonts.orbitron(
+                  color: Colors.white54,
+                  fontSize: 11,
+                  letterSpacing: 2,
+                ),
               ),
-              const SizedBox(width: 48),
-              NeonButton(
-                label: '',
-                onPressed: () => _handleMove(Direction.right),
-                icon: Icons.keyboard_arrow_right,
-                small: true,
-                color: GameColors.neonCyan,
+              Text(
+                '$movesLeft / ${state.maxMoves}',
+                style: GoogleFonts.orbitron(
+                  color: movesColor,
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(3, (i) {
+                  final filled = i < projected;
+                  return Text(
+                    filled ? '★' : '☆',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: filled
+                          ? GameColors.key
+                          : Colors.white24,
+                    ),
+                  );
+                }),
+              ),
+              Text(
+                '3★ ≤$star3  2★ ≤$star2',
+                style: GoogleFonts.exo2(
+                  color: Colors.white38,
+                  fontSize: 9,
+                ),
               ),
             ],
-          ),
-          NeonButton(
-            label: '',
-            onPressed: () => _handleMove(Direction.down),
-            icon: Icons.keyboard_arrow_down,
-            small: true,
-            color: GameColors.neonCyan,
           ),
         ],
       ),
