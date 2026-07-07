@@ -165,6 +165,10 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
     final state = widget.engine.state;
     final theme = widget.theme;
     final screenSize = MediaQuery.of(context).size;
+    // Wide screens (Windows / desktop) get a frame that extends 20px on each
+    // side; narrow (mobile) screens keep the plain fitted size.
+    final isDesktop = screenSize.width >= 600;
+    final frameExtend = isDesktop ? 20.0 : 0.0;
     final tileSize = _calculateTileSize(screenSize, state.width, state.height);
 
     return Focus(
@@ -185,6 +189,7 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
                           (1 - _shakeController.value)
                       : 0.0;
                   final board = Container(
+                    padding: EdgeInsets.symmetric(horizontal: frameExtend),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
@@ -245,8 +250,11 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
   }
 
   double _calculateTileSize(Size screen, int gridW, int gridH) {
+    final isDesktop = screen.width >= 600;
+    // Give the board slightly more vertical room on desktop so the wider frame
+    // (extra 20px each side) has space to breathe; mobile stays as before.
     final maxW = screen.width * 0.92;
-    final maxH = screen.height * 0.58;
+    final maxH = screen.height * (isDesktop ? 0.62 : 0.58);
     final tileW = maxW / gridW;
     final tileH = maxH / gridH;
     return tileW < tileH ? tileW : tileH;
