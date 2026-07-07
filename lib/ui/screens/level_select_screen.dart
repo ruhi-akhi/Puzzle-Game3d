@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../game/models/level_data.dart';
 import '../../game/services/level_loader.dart';
 import '../../game/services/progress_service.dart';
 import '../../theme/game_colors.dart';
+import '../../theme/world_theme.dart';
+import '../widgets/scifi_background.dart';
 import 'game_screen.dart';
 
 class LevelSelectScreen extends StatefulWidget {
@@ -49,72 +52,81 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = WorldTheme.of(widget.world.id);
     return Scaffold(
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.black.withValues(alpha: 0.2),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: GameColors.neonCyan),
+          icon: Icon(Icons.arrow_back, color: theme.accent),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           widget.world.name.toUpperCase(),
-          style: const TextStyle(
-            color: GameColors.neonCyan,
+          style: GoogleFonts.orbitron(
+            color: theme.accent,
             letterSpacing: 3,
             fontSize: 18,
           ),
         ),
         centerTitle: true,
       ),
-      body: _loading
-          ? const Center(
-              child: CircularProgressIndicator(color: GameColors.neonCyan),
-            )
-          : GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.2,
-              ),
-              itemCount: widget.world.levelCount,
-              itemBuilder: (context, index) {
-                final levelNum = index + 1;
-                final levelId = ProgressService.levelId(widget.world.id, levelNum);
-                final isCompleted = _completed.contains(levelId);
-                final stars = _stars[levelId] ?? 0;
-                final unlocked = _unlocked[levelNum] ?? false;
+      body: SciFiBackground(
+        theme: theme,
+        child: SafeArea(
+          child: _loading
+              ? Center(
+                  child: CircularProgressIndicator(color: theme.accent),
+                )
+              : GridView.builder(
+                  padding: const EdgeInsets.all(16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.2,
+                  ),
+                  itemCount: widget.world.levelCount,
+                  itemBuilder: (context, index) {
+                    final levelNum = index + 1;
+                    final levelId = ProgressService.levelId(widget.world.id, levelNum);
+                    final isCompleted = _completed.contains(levelId);
+                    final stars = _stars[levelId] ?? 0;
+                    final unlocked = _unlocked[levelNum] ?? false;
 
-                return _LevelTile(
-                  levelNum: levelNum,
-                  unlocked: unlocked,
-                  completed: isCompleted,
-                  stars: stars,
-                  onTap: unlocked
-                      ? () async {
-                          final level = await LevelLoader.loadLevel(
-                            widget.world.id,
-                            levelNum,
-                          );
-                          if (!context.mounted) return;
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => GameScreen(
-                                level: level,
-                                world: widget.world.id,
-                                levelIndex: levelNum,
-                              ),
-                            ),
-                          );
-                          _loadProgress();
-                        }
-                      : null,
-                );
-              },
-            ),
+                    return _LevelTile(
+                      levelNum: levelNum,
+                      unlocked: unlocked,
+                      completed: isCompleted,
+                      stars: stars,
+                      accent: theme.accent,
+                      onTap: unlocked
+                          ? () async {
+                              final level = await LevelLoader.loadLevel(
+                                widget.world.id,
+                                levelNum,
+                              );
+                              if (!context.mounted) return;
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => GameScreen(
+                                    level: level,
+                                    world: widget.world.id,
+                                    levelIndex: levelNum,
+                                  ),
+                                ),
+                              );
+                              _loadProgress();
+                            }
+                          : null,
+                    );
+                  },
+                ),
+        ),
+      ),
     );
   }
 }
@@ -124,6 +136,7 @@ class _LevelTile extends StatelessWidget {
   final bool unlocked;
   final bool completed;
   final int stars;
+  final Color accent;
   final VoidCallback? onTap;
 
   const _LevelTile({
@@ -131,6 +144,7 @@ class _LevelTile extends StatelessWidget {
     required this.unlocked,
     required this.completed,
     required this.stars,
+    required this.accent,
     this.onTap,
   });
 
@@ -139,7 +153,7 @@ class _LevelTile extends StatelessWidget {
     final color = completed
         ? GameColors.doorOpen
         : unlocked
-            ? GameColors.neonCyan
+            ? accent
             : Colors.grey;
 
     return GestureDetector(
@@ -147,11 +161,11 @@ class _LevelTile extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         decoration: BoxDecoration(
-          color: unlocked ? color.withOpacity(0.08) : Colors.white.withOpacity(0.03),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(unlocked ? 0.5 : 0.2)),
+          color: unlocked ? color.withValues(alpha: 0.08) : Colors.white.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withValues(alpha: unlocked ? 0.5 : 0.2)),
           boxShadow: unlocked
-              ? [BoxShadow(color: color.withOpacity(0.2), blurRadius: 8)]
+              ? [BoxShadow(color: color.withValues(alpha: 0.18), blurRadius: 12)]
               : null,
         ),
         child: Column(
@@ -162,14 +176,17 @@ class _LevelTile extends StatelessWidget {
             else ...[
               Text(
                 '$levelNum',
-                style: TextStyle(
+                style: GoogleFonts.orbitron(
                   color: color,
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               if (stars > 0)
-                Text('⭐' * stars, style: const TextStyle(fontSize: 10)),
+                Text(
+                  '★' * stars,
+                  style: const TextStyle(fontSize: 12, color: GameColors.key),
+                ),
               if (completed && stars == 0)
                 const Icon(Icons.check, color: GameColors.doorOpen, size: 16),
             ],

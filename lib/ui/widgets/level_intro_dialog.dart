@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/game_colors.dart';
+import '../../theme/world_theme.dart';
 
 /// Animated popup shown at level start with objective / hint text.
 Future<void> showLevelIntroDialog(
@@ -9,6 +10,7 @@ Future<void> showLevelIntroDialog(
   required int level,
   required String levelName,
   required String hint,
+  WorldTheme theme = WorldTheme.fallback,
 }) {
   return showGeneralDialog(
     context: context,
@@ -25,6 +27,7 @@ Future<void> showLevelIntroDialog(
             level: level,
             levelName: levelName,
             hint: hint,
+            theme: theme,
             onDismiss: () => Navigator.of(ctx).pop(),
           ),
         ),
@@ -45,6 +48,7 @@ class _IntroCard extends StatefulWidget {
   final int level;
   final String levelName;
   final String hint;
+  final WorldTheme theme;
   final VoidCallback onDismiss;
 
   const _IntroCard({
@@ -52,6 +56,7 @@ class _IntroCard extends StatefulWidget {
     required this.level,
     required this.levelName,
     required this.hint,
+    required this.theme,
     required this.onDismiss,
   });
 
@@ -80,6 +85,7 @@ class _IntroCardState extends State<_IntroCard>
 
   @override
   Widget build(BuildContext context) {
+    final accent = widget.theme.accent;
     return AnimatedBuilder(
       animation: _pulse,
       builder: (context, _) {
@@ -88,15 +94,15 @@ class _IntroCardState extends State<_IntroCard>
           margin: const EdgeInsets.symmetric(horizontal: 28),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: const Color(0xFF111827).withOpacity(0.95),
+            color: const Color(0xFF111827).withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: GameColors.neonCyan.withOpacity(0.6 + glow),
+              color: accent.withValues(alpha: 0.6 + glow),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: GameColors.neonCyan.withOpacity(glow),
+                color: accent.withValues(alpha: glow),
                 blurRadius: 24,
                 spreadRadius: 1,
               ),
@@ -106,9 +112,18 @@ class _IntroCardState extends State<_IntroCard>
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
+                widget.theme.moodName,
+                style: GoogleFonts.orbitron(
+                  color: accent.withValues(alpha: 0.7),
+                  fontSize: 11,
+                  letterSpacing: 3,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
                 'WORLD ${widget.world} — ${widget.level}',
                 style: GoogleFonts.orbitron(
-                  color: GameColors.neonCyan,
+                  color: accent,
                   fontSize: 14,
                   letterSpacing: 3,
                   fontWeight: FontWeight.w600,
@@ -130,10 +145,10 @@ class _IntroCardState extends State<_IntroCard>
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: GameColors.key.withOpacity(0.08),
+                  color: GameColors.key.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: GameColors.key.withOpacity(0.35),
+                    color: GameColors.key.withValues(alpha: 0.35),
                     width: 1,
                   ),
                 ),
@@ -146,7 +161,7 @@ class _IntroCardState extends State<_IntroCard>
                       child: Text(
                         widget.hint,
                         style: GoogleFonts.exo2(
-                          color: GameColors.key.withOpacity(0.95),
+                          color: GameColors.key.withValues(alpha: 0.95),
                           fontSize: 15,
                           height: 1.4,
                         ),
@@ -167,9 +182,9 @@ class _IntroCardState extends State<_IntroCard>
               TextButton(
                 onPressed: widget.onDismiss,
                 style: TextButton.styleFrom(
-                  foregroundColor: GameColors.neonCyan,
+                  foregroundColor: accent,
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                  side: BorderSide(color: GameColors.neonCyan.withOpacity(0.6)),
+                  side: BorderSide(color: accent.withValues(alpha: 0.6)),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),

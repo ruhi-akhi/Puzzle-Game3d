@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../game/models/level_data.dart';
 import '../../game/services/progress_service.dart';
 import '../../theme/game_colors.dart';
+import '../../theme/world_theme.dart';
+import '../widgets/scifi_background.dart';
 import 'level_select_screen.dart';
 
 class WorldSelectScreen extends StatefulWidget {
@@ -45,16 +48,18 @@ class _WorldSelectScreenState extends State<WorldSelectScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.black.withValues(alpha: 0.2),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: GameColors.neonCyan),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'SELECT WORLD',
-          style: TextStyle(
+          style: GoogleFonts.orbitron(
             color: GameColors.neonCyan,
             letterSpacing: 3,
             fontSize: 18,
@@ -62,40 +67,44 @@ class _WorldSelectScreenState extends State<WorldSelectScreen> {
         ),
         centerTitle: true,
       ),
-      body: _loading
-          ? const Center(
-              child: CircularProgressIndicator(color: GameColors.neonCyan),
-            )
-          : RefreshIndicator(
-              color: GameColors.neonCyan,
-              onRefresh: _loadAll,
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: worlds.length,
-                itemBuilder: (context, index) {
-                  final world = worlds[index];
-                  final unlocked = _unlocked[world.id] ?? false;
-                  final count = _completed[world.id] ?? 0;
+      body: SciFiBackground(
+        child: SafeArea(
+          child: _loading
+              ? const Center(
+                  child: CircularProgressIndicator(color: GameColors.neonCyan),
+                )
+              : RefreshIndicator(
+                  color: GameColors.neonCyan,
+                  onRefresh: _loadAll,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: worlds.length,
+                    itemBuilder: (context, index) {
+                      final world = worlds[index];
+                      final unlocked = _unlocked[world.id] ?? false;
+                      final count = _completed[world.id] ?? 0;
 
-                  return _WorldCard(
-                    world: world,
-                    unlocked: unlocked,
-                    completedCount: count,
-                    onTap: unlocked
-                        ? () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => LevelSelectScreen(world: world),
-                              ),
-                            );
-                            _loadAll();
-                          }
-                        : null,
-                  );
-                },
-              ),
-            ),
+                      return _WorldCard(
+                        world: world,
+                        unlocked: unlocked,
+                        completedCount: count,
+                        onTap: unlocked
+                            ? () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => LevelSelectScreen(world: world),
+                                  ),
+                                );
+                                _loadAll();
+                              }
+                            : null,
+                      );
+                    },
+                  ),
+                ),
+        ),
+      ),
     );
   }
 }
@@ -113,22 +122,7 @@ class _WorldCard extends StatelessWidget {
     this.onTap,
   });
 
-  Color get _worldColor {
-    switch (world.id) {
-      case 1:
-        return GameColors.neonCyan;
-      case 2:
-        return GameColors.laser;
-      case 3:
-        return GameColors.ice;
-      case 4:
-        return GameColors.clone;
-      case 5:
-        return GameColors.gravity;
-      default:
-        return GameColors.neonPink;
-    }
-  }
+  Color get _worldColor => WorldTheme.of(world.id).accent;
 
   @override
   Widget build(BuildContext context) {
@@ -141,17 +135,17 @@ class _WorldCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: unlocked
-                ? _worldColor.withOpacity(0.08)
-                : Colors.white.withOpacity(0.03),
-            borderRadius: BorderRadius.circular(12),
+                ? _worldColor.withValues(alpha: 0.08)
+                : Colors.white.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: unlocked
-                  ? _worldColor.withOpacity(0.5)
-                  : Colors.white.withOpacity(0.1),
-              width: 2,
+                  ? _worldColor.withValues(alpha: 0.5)
+                  : Colors.white.withValues(alpha: 0.1),
+              width: 1.5,
             ),
             boxShadow: unlocked
-                ? [BoxShadow(color: _worldColor.withOpacity(0.2), blurRadius: 12)]
+                ? [BoxShadow(color: _worldColor.withValues(alpha: 0.18), blurRadius: 16)]
                 : null,
           ),
           child: Row(
@@ -160,15 +154,16 @@ class _WorldCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: _worldColor.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
+                  color: _worldColor.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: _worldColor.withValues(alpha: 0.4)),
                 ),
                 child: Center(
                   child: Text(
                     '${world.id}',
-                    style: TextStyle(
+                    style: GoogleFonts.orbitron(
                       color: unlocked ? _worldColor : Colors.grey,
-                      fontSize: 24,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -181,26 +176,26 @@ class _WorldCard extends StatelessWidget {
                   children: [
                     Text(
                       world.name,
-                      style: TextStyle(
+                      style: GoogleFonts.orbitron(
                         color: unlocked ? GameColors.hudText : Colors.grey,
-                        fontSize: 18,
+                        fontSize: 17,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
                       world.mechanic,
-                      style: TextStyle(
-                        color: _worldColor.withOpacity(0.8),
+                      style: GoogleFonts.exo2(
+                        color: _worldColor.withValues(alpha: 0.8),
                         fontSize: 12,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '$completedCount / ${world.levelCount} completed',
-                      style: TextStyle(
+                      style: GoogleFonts.exo2(
                         color: unlocked
-                            ? GameColors.doorOpen.withOpacity(0.8)
-                            : GameColors.hudText.withOpacity(0.5),
+                            ? GameColors.doorOpen.withValues(alpha: 0.8)
+                            : GameColors.hudText.withValues(alpha: 0.5),
                         fontSize: 11,
                       ),
                     ),

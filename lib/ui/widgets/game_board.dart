@@ -6,7 +6,7 @@ import '../../game/models/tile_type.dart';
 import '../../game/services/audio_service.dart';
 import '../../game/systems/game_engine.dart';
 import '../../game/rendering/game_painter.dart';
-import '../../theme/game_colors.dart';
+import '../../theme/world_theme.dart';
 import 'direction_pad.dart';
 
 class GameBoard extends StatefulWidget {
@@ -14,6 +14,7 @@ class GameBoard extends StatefulWidget {
   final VoidCallback onStateChanged;
   final int world;
   final int levelIndex;
+  final WorldTheme theme;
 
   const GameBoard({
     super.key,
@@ -21,6 +22,7 @@ class GameBoard extends StatefulWidget {
     required this.onStateChanged,
     required this.world,
     required this.levelIndex,
+    required this.theme,
   });
 
   @override
@@ -30,11 +32,15 @@ class GameBoard extends StatefulWidget {
 class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
   late AnimationController _glowController;
   late AnimationController _moveController;
+  late AnimationController _flashController;
+  late AnimationController _shakeController;
 
   double _displayPlayerX = 0;
   double _displayPlayerY = 0;
   double _fromX = 0;
   double _fromY = 0;
+
+  final List<Offset> _trail = [];
 
   @override
   void initState() {
@@ -58,12 +64,24 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
               (widget.engine.state.playerY - _fromY) * _moveController.value;
         });
       });
+
+    _flashController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
+
+    _shakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
   }
 
   @override
   void dispose() {
     _glowController.dispose();
     _moveController.dispose();
+    _flashController.dispose();
+    _shakeController.dispose();
     super.dispose();
   }
 
@@ -74,7 +92,13 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
         oldWidget.engine.state.movesUsed > 0) {
       _displayPlayerX = widget.engine.state.playerX.toDouble();
       _displayPlayerY = widget.engine.state.playerY.toDouble();
+      _trail.clear();
     }
+  }
+
+  void _pushTrail(int x, int y) {
+    _trail.add(Offset(x.toDouble(), y.toDouble()));
+    if (_trail.length > 5) _trail.removeAt(0);
   }
 
   void _handleMove(Direction dir) {
@@ -89,14 +113,18 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
         AudioService.playCollect();
         HapticFeedback.mediumImpact();
       }
+      _pushTrail(beforeX, beforeY);
       _fromX = beforeX.toDouble();
       _fromY = beforeY.toDouble();
       _moveController.forward(from: 0);
+      _flashController.forward(from: 0);
       widget.onStateChanged();
       setState(() {});
     } else {
+      // Blocked move: buzz + short shake as negative feedback.
       AudioService.playBlock();
       AudioService.hapticBlock();
+      _shakeController.forward(from: 0);
     }
   }
 
@@ -135,6 +163,7 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final state = widget.engine.state;
+    final theme = widget.theme;
     final screenSize = MediaQuery.of(context).size;
     final tileSize = _calculateTileSize(screenSize, state.width, state.height);
 
@@ -143,36 +172,46 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
       onKeyEvent: _handleKey,
       child: Column(
         children: [
-          _buildHud(state),
+          _buildHud(state, theme),
           Expanded(
             child: Center(
               child: AnimatedBuilder(
-                animation: _glowController,
+                animation: Listenable.merge(
+                    [_glowController, _flashController, _shakeController]),
                 builder: (context, _) {
-                  return Container(
+                  final shake = _shakeController.isAnimating
+                      ? math.sin(_shakeController.value * math.pi * 6) *
+                          6 *
+                          (1 - _shakeController.value)
+                      : 0.0;
+                  final board = Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: GameColors.neonCyan.withOpacity(
-                          0.15 + 0.08 * math.sin(_glowController.value * math.pi * 2),
+                        color: theme.accent.withValues(
+                          alpha: 0.2 +
+                              0.1 * math.sin(_glowController.value * math.pi * 2),
                         ),
                         width: 1,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: GameColors.neonCyan.withOpacity(
-                            0.12 +
-                                0.08 *
+                          color: (_shakeController.isAnimating
+                                  ? theme.danger
+                                  : theme.accent)
+                              .withValues(
+                            alpha: 0.14 +
+                                0.1 *
                                     math.sin(
                                         _glowController.value * math.pi * 2),
                           ),
-                          blurRadius: 28,
+                          blurRadius: 30,
                           spreadRadius: 1,
                         ),
                       ],
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(14),
                       child: CustomPaint(
                         size: Size(
                           state.width * tileSize,
@@ -184,15 +223,22 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
                           animationPhase: _glowController.value,
                           displayPlayerX: _displayPlayerX,
                           displayPlayerY: _displayPlayerY,
+                          theme: theme,
+                          trail: List.of(_trail),
+                          moveFlash: 1 - _flashController.value,
                         ),
                       ),
                     ),
+                  );
+                  return Transform.translate(
+                    offset: Offset(shake, 0),
+                    child: board,
                   );
                 },
               ),
             ),
           ),
-          DirectionPad(onMove: _handleMove),
+          DirectionPad(onMove: _handleMove, accent: theme.accent),
         ],
       ),
     );
@@ -206,9 +252,10 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
     return tileW < tileH ? tileW : tileH;
   }
 
-  Widget _buildHud(dynamic state) {
+  Widget _buildHud(dynamic state, WorldTheme theme) {
     final movesLeft = state.maxMoves - state.movesUsed;
-    final movesColor = movesLeft <= 5 ? GameColors.laser : GameColors.neonCyan;
+    final lowMoves = movesLeft <= 5;
+    final movesColor = lowMoves ? theme.danger : theme.accent;
     final projected = _projectedStars(state.movesUsed, state.maxMoves);
     final star3 = (state.maxMoves * 0.5).ceil();
     final star2 = (state.maxMoves * 0.75).ceil();
@@ -218,9 +265,15 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
       margin: const EdgeInsets.fromLTRB(12, 4, 12, 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.35),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: GameColors.neonCyan.withOpacity(0.25), width: 1),
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.accent.withValues(alpha: 0.25), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: theme.accent.withValues(alpha: 0.08),
+            blurRadius: 16,
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -232,7 +285,7 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
                 Text(
                   'WORLD ${widget.world} — ${widget.levelIndex}',
                   style: GoogleFonts.orbitron(
-                    color: GameColors.neonCyan.withOpacity(0.85),
+                    color: theme.accent.withValues(alpha: 0.85),
                     fontSize: 13,
                     letterSpacing: 2,
                     fontWeight: FontWeight.w600,
@@ -293,9 +346,7 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
                     filled ? '★' : '☆',
                     style: TextStyle(
                       fontSize: 14,
-                      color: filled
-                          ? GameColors.key
-                          : Colors.white24,
+                      color: filled ? GameColors.key : Colors.white24,
                     ),
                   );
                 }),

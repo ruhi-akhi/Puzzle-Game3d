@@ -7,6 +7,7 @@ import '../../game/services/audio_service.dart';
 import '../../game/services/progress_service.dart';
 import '../../game/systems/game_engine.dart';
 import '../../theme/game_colors.dart';
+import '../../theme/world_theme.dart';
 import '../widgets/game_board.dart';
 import '../widgets/scifi_background.dart';
 import '../widgets/level_intro_dialog.dart';
@@ -31,6 +32,8 @@ class _GameScreenState extends State<GameScreen> {
   late GameEngine _engine;
   bool _dialogShown = false;
 
+  WorldTheme get _theme => WorldTheme.of(widget.world);
+
   @override
   void initState() {
     super.initState();
@@ -48,6 +51,7 @@ class _GameScreenState extends State<GameScreen> {
       level: widget.levelIndex,
       levelName: widget.level.name,
       hint: hint,
+      theme: _theme,
     );
   }
 
@@ -60,7 +64,7 @@ class _GameScreenState extends State<GameScreen> {
         backgroundColor: const Color(0xFF111827),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
-          side: BorderSide(color: GameColors.key.withOpacity(0.4)),
+          side: BorderSide(color: GameColors.key.withValues(alpha: 0.4)),
         ),
         title: Row(
           children: [
@@ -89,7 +93,7 @@ class _GameScreenState extends State<GameScreen> {
             onPressed: () => Navigator.pop(ctx),
             child: Text(
               'GOT IT',
-              style: GoogleFonts.orbitron(color: GameColors.neonCyan),
+              style: GoogleFonts.orbitron(color: _theme.accent),
             ),
           ),
         ],
@@ -125,7 +129,7 @@ class _GameScreenState extends State<GameScreen> {
           backgroundColor: const Color(0xFF1A2332),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: GameColors.doorOpen.withOpacity(0.5)),
+            side: BorderSide(color: GameColors.doorOpen.withValues(alpha: 0.5)),
           ),
           title: Text(
             'LEVEL COMPLETE!',
@@ -155,7 +159,7 @@ class _GameScreenState extends State<GameScreen> {
                   child: Text(
                     'Replay for more stars!',
                     style: GoogleFonts.exo2(
-                      color: GameColors.neonCyan.withOpacity(0.7),
+                      color: _theme.accent.withValues(alpha: 0.7),
                       fontSize: 12,
                     ),
                   ),
@@ -175,7 +179,7 @@ class _GameScreenState extends State<GameScreen> {
                 Navigator.pop(ctx);
                 await _goToNextLevel();
               },
-              child: Text('NEXT', style: GoogleFonts.orbitron(color: GameColors.neonCyan)),
+              child: Text('NEXT', style: GoogleFonts.orbitron(color: _theme.accent)),
             ),
           ],
         ),
@@ -216,7 +220,7 @@ class _GameScreenState extends State<GameScreen> {
                 Navigator.pop(ctx);
                 _restart();
               },
-              child: Text('RETRY', style: GoogleFonts.orbitron(color: GameColors.neonCyan)),
+              child: Text('RETRY', style: GoogleFonts.orbitron(color: _theme.accent)),
             ),
           ],
         ),
@@ -256,20 +260,21 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = _theme;
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.black.withOpacity(0.25),
+        backgroundColor: Colors.black.withValues(alpha: 0.25),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: GameColors.neonCyan),
+          icon: Icon(Icons.arrow_back, color: theme.accent),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'ECHO LABYRINTH',
+          theme.moodName,
           style: GoogleFonts.orbitron(
-            color: GameColors.neonCyan.withOpacity(0.7),
+            color: theme.accent.withValues(alpha: 0.75),
             fontSize: 12,
             letterSpacing: 3,
           ),
@@ -283,12 +288,12 @@ class _GameScreenState extends State<GameScreen> {
               tooltip: 'Hint',
             ),
           IconButton(
-            icon: const Icon(Icons.refresh, color: GameColors.neonPink),
+            icon: Icon(Icons.refresh, color: theme.accentAlt),
             onPressed: _restart,
             tooltip: 'Restart',
           ),
           IconButton(
-            icon: const Icon(Icons.undo, color: GameColors.neonPurple),
+            icon: Icon(Icons.undo, color: theme.accent),
             onPressed: () {
               _engine.undo();
               setState(() {});
@@ -298,12 +303,14 @@ class _GameScreenState extends State<GameScreen> {
         ],
       ),
       body: SciFiBackground(
+        theme: theme,
         child: SafeArea(
           child: GameBoard(
             engine: _engine,
             onStateChanged: _onStateChanged,
             world: widget.world,
             levelIndex: widget.levelIndex,
+            theme: theme,
           ),
         ),
       ),

@@ -1,8 +1,8 @@
 import 'dart:math' as math;
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../models/game_state.dart';
 import '../models/tile_type.dart';
+import '../../theme/world_theme.dart';
 
 class GameColors {
   static const background = Color(0xFF0A0E17);
@@ -41,6 +41,13 @@ class GamePainter extends CustomPainter {
   final double animationPhase;
   final double displayPlayerX;
   final double displayPlayerY;
+  final WorldTheme theme;
+
+  /// Recent player grid positions (oldest first) for the colored trail.
+  final List<Offset> trail;
+
+  /// 0..1 pulse used to tint the player after a valid move.
+  final double moveFlash;
 
   GamePainter({
     required this.state,
@@ -48,6 +55,9 @@ class GamePainter extends CustomPainter {
     this.animationPhase = 0,
     this.displayPlayerX = -1,
     this.displayPlayerY = -1,
+    this.theme = WorldTheme.fallback,
+    this.trail = const [],
+    this.moveFlash = 0,
   });
 
   double get _pulse => 0.5 + 0.5 * math.sin(animationPhase * math.pi * 2);
@@ -64,7 +74,6 @@ class GamePainter extends CustomPainter {
     canvas.save();
     canvas.translate(offsetX, offsetY);
 
-    // Draw tiles
     for (var y = 0; y < state.height; y++) {
       for (var x = 0; x < state.width; x++) {
         _drawTile(canvas, x, y, state.tileAt(x, y));
@@ -79,16 +88,67 @@ class GamePainter extends CustomPainter {
       }
     }
 
-    // Draw clone
+    _drawTrail(canvas);
+
     for (final clone in state.cloneHistory) {
       _drawClone(canvas, clone.x, clone.y);
     }
 
-    // Draw player with glow (3D shadow)
     _drawPlayerShadow(canvas, _playerX, _playerY);
     _drawPlayer(canvas, _playerX, _playerY);
 
     canvas.restore();
+  }
+
+  /// Fading accent trail behind the player — a "correct move" light path.
+  void _drawTrail(Canvas canvas) {
+    if (trail.isEmpty) return;
+    for (var i = 0; i < trail.length; i++) {
+      final t = (i + 1) / trail.length;
+      final center = Offset(
+        trail[i].dx * tileSize + tileSize / 2,
+        trail[i].dy * tileSize + tileSize / 2,
+      );
+      final glow = Paint()
+        ..color = theme.accent.withValues(alpha: 0.10 * t)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+      canvas.drawCircle(center, tileSize * 0.22 * t, glow);
+      final dot = Paint()..color = theme.accent.withValues(alpha: 0.18 * t);
+      canvas.drawCircle(center, tileSize * 0.10 * t, dot);
+    }
+  }
+
+  /// Frosted-glass tile: translucent fill + top light gradient + hairline edge.
+  void _drawGlassTile(
+    Canvas canvas,
+    Rect rect,
+    Color tint, {
+    double radius = 6,
+    double fill = 0.22,
+  }) {
+    final rr = RRect.fromRectAndRadius(rect, Radius.circular(radius));
+
+    final base = Paint()..color = tint.withValues(alpha: fill);
+    canvas.drawRRect(rr, base);
+
+    final sheen = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Colors.white.withValues(alpha: 0.14),
+          Colors.white.withValues(alpha: 0.02),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.35, 1.0],
+      ).createShader(rect);
+    canvas.drawRRect(rr, sheen);
+
+    final edge = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = tint.withValues(alpha: 0.55);
+    canvas.drawRRect(rr.deflate(0.5), edge);
   }
 
   void _drawTile(Canvas canvas, int x, int y, TileType type) {
@@ -103,98 +163,65 @@ class GamePainter extends CustomPainter {
 
     switch (type) {
       case TileType.wall:
-        paint.color = GameColors.wall;
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(rect, const Radius.circular(4)),
-          paint,
-        );
-        _drawPulsingGlow(canvas, rect, GameColors.wallGlow, base: 0.15, range: 0.2);
+        _drawGlassTile(canvas, rect, GameColors.wall, radius: 4, fill: 0.55);
+        _drawPulsingGlow(canvas, rect, theme.accentAlt, base: 0.08, range: 0.12);
       case TileType.floor:
       case TileType.empty:
-        paint.color = GameColors.floor;
-        canvas.drawRect(rect, paint);
-        paint.color = GameColors.neonCyan.withOpacity(0.02 + 0.02 * _pulse);
-        canvas.drawRect(rect.deflate(tileSize * 0.35), paint);
+        _drawFloor(canvas, rect);
       case TileType.door:
-        paint.color = GameColors.door;
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(rect, const Radius.circular(4)),
-          paint,
-        );
+        _drawGlassTile(canvas, rect, GameColors.door, radius: 4, fill: 0.4);
         _drawPulsingGlow(canvas, rect, GameColors.door, base: 0.35, range: 0.3);
       case TileType.doorOpen:
-        paint.color = GameColors.doorOpen;
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(rect, const Radius.circular(4)),
-          paint,
-        );
+        _drawGlassTile(canvas, rect, GameColors.doorOpen, radius: 4, fill: 0.25);
       case TileType.key:
-        paint.color = GameColors.floor;
-        canvas.drawRect(rect, paint);
+        _drawFloor(canvas, rect);
         _drawKey(canvas, rect);
       case TileType.box:
-        paint.color = GameColors.box;
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(rect, const Radius.circular(6)),
-          paint,
-        );
+        _drawGlassTile(canvas, rect, GameColors.box, radius: 6, fill: 0.38);
         _drawPulsingGlow(canvas, rect, GameColors.neonPurple, base: 0.25, range: 0.35);
       case TileType.goal:
-        paint.color = GameColors.floor;
-        canvas.drawRect(rect, paint);
+        _drawFloor(canvas, rect);
         _drawGoal(canvas, rect);
       case TileType.mirror:
       case TileType.mirrorSlash:
-        paint.color = GameColors.floor;
-        canvas.drawRect(rect, paint);
+        _drawFloor(canvas, rect);
         _drawMirror(canvas, rect, true);
       case TileType.mirrorBackslash:
-        paint.color = GameColors.floor;
-        canvas.drawRect(rect, paint);
+        _drawFloor(canvas, rect);
         _drawMirror(canvas, rect, false);
       case TileType.laserEmitter:
-        paint.color = GameColors.floor;
-        canvas.drawRect(rect, paint);
+        _drawFloor(canvas, rect);
         _drawLaserEmitter(canvas, rect);
       case TileType.laserBeam:
         paint.color = GameColors.laser;
         canvas.drawRect(rect, paint);
         _drawPulsingGlow(canvas, rect, GameColors.laserGlow, base: 0.45, range: 0.45, blur: 10);
       case TileType.redSwitch:
-        paint.color = GameColors.floor;
-        canvas.drawRect(rect, paint);
+        _drawFloor(canvas, rect);
         _drawSwitch(canvas, rect, GameColors.redSwitch, state.redSwitchOn);
       case TileType.blueSwitch:
-        paint.color = GameColors.floor;
-        canvas.drawRect(rect, paint);
+        _drawFloor(canvas, rect);
         _drawSwitch(canvas, rect, GameColors.blueSwitch, state.blueSwitchOn);
       case TileType.redDoor:
-        paint.color = state.redSwitchOn ? GameColors.doorOpen : GameColors.redSwitch;
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(rect, const Radius.circular(4)),
-          paint,
-        );
+        _drawGlassTile(canvas, rect,
+            state.redSwitchOn ? GameColors.doorOpen : GameColors.redSwitch,
+            radius: 4, fill: 0.35);
       case TileType.blueDoor:
-        paint.color = state.blueSwitchOn ? GameColors.doorOpen : GameColors.blueSwitch;
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(rect, const Radius.circular(4)),
-          paint,
-        );
+        _drawGlassTile(canvas, rect,
+            state.blueSwitchOn ? GameColors.doorOpen : GameColors.blueSwitch,
+            radius: 4, fill: 0.35);
       case TileType.teleporterA:
       case TileType.teleporterB:
-        paint.color = GameColors.floor;
-        canvas.drawRect(rect, paint);
+        _drawFloor(canvas, rect);
         _drawTeleporter(canvas, rect);
       case TileType.ice:
-        paint.color = GameColors.ice.withOpacity(0.3);
-        canvas.drawRect(rect, paint);
+        _drawGlassTile(canvas, rect, GameColors.ice, radius: 4, fill: 0.2);
         _drawIce(canvas, rect);
       case TileType.bomb:
         paint.color = GameColors.bomb;
         canvas.drawCircle(rect.center, tileSize * 0.35, paint);
       case TileType.gravityPad:
-        paint.color = GameColors.floor;
-        canvas.drawRect(rect, paint);
+        _drawFloor(canvas, rect);
         _drawGravityPad(canvas, rect);
       case TileType.darkZone:
         paint.color = GameColors.darkZone;
@@ -203,13 +230,12 @@ class GamePainter extends CustomPainter {
         paint.color = GameColors.lightZone;
         canvas.drawRect(rect, paint);
       default:
-        paint.color = GameColors.floor;
-        canvas.drawRect(rect, paint);
+        _drawFloor(canvas, rect);
     }
 
-    // Grid lines
+    // Hairline grid — nearly invisible, tinted by the world accent.
     final gridPaint = Paint()
-      ..color = GameColors.gridLine.withOpacity(0.3)
+      ..color = theme.accent.withValues(alpha: 0.06)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.5;
     canvas.drawRect(
@@ -218,9 +244,18 @@ class GamePainter extends CustomPainter {
     );
   }
 
+  void _drawFloor(Canvas canvas, Rect rect) {
+    final base = Paint()..color = GameColors.floor.withValues(alpha: 0.85);
+    canvas.drawRect(rect, base);
+    // Subtle inner accent glow that breathes with the pulse.
+    final inner = Paint()
+      ..color = theme.accent.withValues(alpha: 0.02 + 0.025 * _pulse);
+    canvas.drawRect(rect.deflate(tileSize * 0.34), inner);
+  }
+
   void _drawGlow(Canvas canvas, Rect rect, Color color, double intensity) {
     final glowPaint = Paint()
-      ..color = color.withOpacity(intensity)
+      ..color = color.withValues(alpha: intensity)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
     canvas.drawRRect(
       RRect.fromRectAndRadius(rect.inflate(2), const Radius.circular(4)),
@@ -237,7 +272,7 @@ class GamePainter extends CustomPainter {
     double blur = 8,
   }) {
     final glowPaint = Paint()
-      ..color = color.withOpacity(base + range * _pulse)
+      ..color = color.withValues(alpha: base + range * _pulse)
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur + 2 * _pulse);
     canvas.drawRRect(
       RRect.fromRectAndRadius(rect.inflate(2 + _pulse * 2), const Radius.circular(4)),
@@ -251,7 +286,7 @@ class GamePainter extends CustomPainter {
       y * tileSize + tileSize / 2 + tileSize * 0.12,
     );
     final shadow = Paint()
-      ..color = GameColors.player.withOpacity(0.25)
+      ..color = theme.accent.withValues(alpha: 0.25)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     canvas.drawOval(
       Rect.fromCenter(center: center, width: tileSize * 0.5, height: tileSize * 0.2),
@@ -264,24 +299,27 @@ class GamePainter extends CustomPainter {
       x * tileSize + tileSize / 2,
       y * tileSize + tileSize / 2,
     );
-    final pulse = 1.0 + 0.08 * _pulseFast;
+    // A brief bump in size + brightness right after a valid move.
+    final flash = moveFlash.clamp(0.0, 1.0);
+    final pulse = 1.0 + 0.08 * _pulseFast + 0.12 * flash;
     final radius = tileSize * 0.32 * pulse;
 
+    final core = Color.lerp(theme.accent, Colors.white, 0.25 * flash)!;
+
     final glowPaint = Paint()
-      ..color = GameColors.playerGlow.withOpacity(0.5 + 0.4 * _pulse)
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 10 + 6 * _pulse);
+      ..color = theme.accent.withValues(alpha: 0.45 + 0.4 * _pulse + 0.2 * flash)
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 10 + 6 * _pulse + 6 * flash);
     canvas.drawCircle(center, radius + 6 + 2 * _pulse, glowPaint);
 
     final outerGlow = Paint()
-      ..color = GameColors.player.withOpacity(0.15 + 0.15 * _pulse)
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 16);
+      ..color = theme.accent.withValues(alpha: 0.15 + 0.15 * _pulse)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
     canvas.drawCircle(center, radius + 10, outerGlow);
 
-    final paint = Paint()..color = GameColors.player;
+    final paint = Paint()..color = core;
     canvas.drawCircle(center, radius, paint);
 
-    // Inner highlight
-    final highlight = Paint()..color = Colors.white.withOpacity(0.4);
+    final highlight = Paint()..color = Colors.white.withValues(alpha: 0.4);
     canvas.drawCircle(
       center + Offset(-radius * 0.2, -radius * 0.2),
       radius * 0.3,
@@ -295,7 +333,7 @@ class GamePainter extends CustomPainter {
       y * tileSize + tileSize / 2,
     );
     final paint = Paint()
-      ..color = GameColors.clone.withOpacity(0.5)
+      ..color = GameColors.clone.withValues(alpha: 0.5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
     canvas.drawCircle(center, tileSize * 0.28, paint);
@@ -321,14 +359,14 @@ class GamePainter extends CustomPainter {
 
   void _drawGoal(Canvas canvas, Rect rect) {
     final paint = Paint()
-      ..color = GameColors.goal.withOpacity(0.35 + 0.35 * _pulse)
+      ..color = theme.accentAlt.withValues(alpha: 0.35 + 0.35 * _pulse)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2 + _pulse;
     canvas.drawRRect(
       RRect.fromRectAndRadius(rect.deflate(4), const Radius.circular(4)),
       paint,
     );
-    _drawPulsingGlow(canvas, rect, GameColors.goal, base: 0.1, range: 0.25, blur: 6);
+    _drawPulsingGlow(canvas, rect, theme.accentAlt, base: 0.1, range: 0.25, blur: 6);
   }
 
   void _drawMirror(Canvas canvas, Rect rect, bool slash) {
@@ -352,7 +390,7 @@ class GamePainter extends CustomPainter {
 
   void _drawSwitch(Canvas canvas, Rect rect, Color color, bool isOn) {
     final paint = Paint()
-      ..color = isOn ? color : color.withOpacity(0.4);
+      ..color = isOn ? color : color.withValues(alpha: 0.4);
     canvas.drawCircle(rect.center, tileSize * 0.2, paint);
     if (isOn) _drawPulsingGlow(canvas, rect, color, base: 0.4, range: 0.4);
   }
@@ -376,7 +414,7 @@ class GamePainter extends CustomPainter {
 
   void _drawIce(Canvas canvas, Rect rect) {
     final paint = Paint()
-      ..color = GameColors.ice.withOpacity(0.6)
+      ..color = GameColors.ice.withValues(alpha: 0.6)
       ..strokeWidth = 1;
     canvas.drawLine(
       Offset(rect.left + 4, rect.top + 8),
@@ -400,5 +438,8 @@ class GamePainter extends CustomPainter {
       oldDelegate.state != state ||
       oldDelegate.animationPhase != animationPhase ||
       oldDelegate.displayPlayerX != displayPlayerX ||
-      oldDelegate.displayPlayerY != displayPlayerY;
+      oldDelegate.displayPlayerY != displayPlayerY ||
+      oldDelegate.theme != theme ||
+      oldDelegate.moveFlash != moveFlash ||
+      oldDelegate.trail != trail;
 }
