@@ -90,114 +90,118 @@ class _IntroCardState extends State<_IntroCard>
       animation: _pulse,
       builder: (context, _) {
         final glow = 0.15 + _pulse.value * 0.15;
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 28),
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: const Color(0xFF111827).withValues(alpha: 0.95),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: accent.withValues(alpha: 0.6 + glow),
-              width: 1,
+        return ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 380),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 28),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF111827).withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: accent.withValues(alpha: 0.6 + glow),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: glow),
+                  blurRadius: 24,
+                  spreadRadius: 1,
+                ),
+              ],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: accent.withValues(alpha: glow),
-                blurRadius: 24,
-                spreadRadius: 1,
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                widget.theme.moodName,
-                style: GoogleFonts.orbitron(
-                  color: accent.withValues(alpha: 0.7),
-                  fontSize: 11,
-                  letterSpacing: 3,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'WORLD ${widget.world} — ${widget.level}',
-                style: GoogleFonts.orbitron(
-                  color: accent,
-                  fontSize: 14,
-                  letterSpacing: 3,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                widget.levelName.toUpperCase(),
-                style: GoogleFonts.orbitron(
-                  color: GameColors.hudText,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: GameColors.key.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: GameColors.key.withValues(alpha: 0.35),
-                    width: 1,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  widget.theme.moodName,
+                  style: GoogleFonts.orbitron(
+                    color: accent.withValues(alpha: 0.7),
+                    fontSize: 11,
+                    letterSpacing: 3,
                   ),
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('💡', style: TextStyle(fontSize: 20)),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        widget.hint,
-                        style: GoogleFonts.exo2(
-                          color: GameColors.key.withValues(alpha: 0.95),
-                          fontSize: 15,
-                          height: 1.4,
+                const SizedBox(height: 4),
+                Text(
+                  'WORLD ${widget.world} — ${widget.level}',
+                  style: GoogleFonts.orbitron(
+                    color: accent,
+                    fontSize: 14,
+                    letterSpacing: 3,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  widget.levelName.toUpperCase(),
+                  style: GoogleFonts.orbitron(
+                    color: GameColors.hudText,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: GameColors.key.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: GameColors.key.withValues(alpha: 0.35),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('💡', style: TextStyle(fontSize: 20)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          widget.hint,
+                          style: GoogleFonts.exo2(
+                            color: GameColors.key.withValues(alpha: 0.95),
+                            fontSize: 15,
+                            height: 1.4,
+                          ),
                         ),
                       ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Earn up to 3★ — fewer moves = more stars!',
+                  style: GoogleFonts.exo2(
+                    color: Colors.white54,
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 18),
+                TextButton(
+                  onPressed: widget.onDismiss,
+                  style: TextButton.styleFrom(
+                    foregroundColor: accent,
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    side: BorderSide(color: accent.withValues(alpha: 0.6)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Earn up to 3★ — fewer moves = more stars!',
-                style: GoogleFonts.exo2(
-                  color: Colors.white54,
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 18),
-              TextButton(
-                onPressed: widget.onDismiss,
-                style: TextButton.styleFrom(
-                  foregroundColor: accent,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                  side: BorderSide(color: accent.withValues(alpha: 0.6)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'START',
+                    style: GoogleFonts.orbitron(
+                      letterSpacing: 3,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                child: Text(
-                  'START',
-                  style: GoogleFonts.orbitron(
-                    letterSpacing: 3,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
