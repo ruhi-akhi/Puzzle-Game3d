@@ -4,12 +4,12 @@
   "world": 4,
   "maxMoves": 22,
   "mechanics": ["clone"],
-  "hint": "Use walls to separate paths for you and your echo.",
+  "hint": "Find the gap in the wall – go DOWN, then RIGHT to the goal!",
   "grid": [
     "##########",
     "#@..#..G.#",
-    "#..C#....#",
-    "#...#..#.#",
+    "#...#....#",
+    "#...C..#.#",
     "#...#....#",
     "##########"
   ]
