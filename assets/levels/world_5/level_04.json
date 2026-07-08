@@ -1,0 +1,17 @@
+{
+  "id": 504,
+  "name": "Gravity Switch",
+  "world": 5,
+  "maxMoves": 20,
+  "mechanics": ["gravity"],
+  "hint": "Toggle pads to reach higher ledges.",
+  "grid": [
+    "##########",
+    "#@.......#",
+    "#...g....#",
+    "#..###...#",
+    "#...g..G.#",
+    "#........#",
+    "##########"
+  ]
+}

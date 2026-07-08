@@ -1,0 +1,16 @@
+{
+  "id": 405,
+  "name": "Echo Vault",
+  "world": 4,
+  "maxMoves": 22,
+  "mechanics": ["clone"],
+  "hint": "Use walls to separate paths for you and your echo.",
+  "grid": [
+    "##########",
+    "#@..#..G.#",
+    "#..C#....#",
+    "#...#..#.#",
+    "#...#....#",
+    "##########"
+  ]
+}

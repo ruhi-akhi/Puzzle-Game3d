@@ -1,0 +1,16 @@
+{
+  "id": 305,
+  "name": "Shallow Drift",
+  "world": 3,
+  "maxMoves": 12,
+  "mechanics": ["ice"],
+  "hint": "Short, precise slides win this one.",
+  "grid": [
+    "##########",
+    "#@..I....#",
+    "#..I.I...#",
+    "#..I..I..#",
+    "#...I..G.#",
+    "##########"
+  ]
+}

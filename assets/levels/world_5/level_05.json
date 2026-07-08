@@ -1,0 +1,17 @@
+{
+  "id": 505,
+  "name": "Well Core",
+  "world": 5,
+  "maxMoves": 22,
+  "mechanics": ["gravity"],
+  "hint": "Chain gravity flips to route to the goal.",
+  "grid": [
+    "##########",
+    "#@..g....#",
+    "#..g.....#",
+    "#..###...#",
+    "#...g..G.#",
+    "#........#",
+    "##########"
+  ]
+}

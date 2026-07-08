@@ -1,0 +1,16 @@
+{
+  "id": 404,
+  "name": "Synchronized",
+  "world": 4,
+  "maxMoves": 20,
+  "mechanics": ["clone"],
+  "hint": "Move so that both you and your echo reach switches.",
+  "grid": [
+    "##########",
+    "#@..C..G.#",
+    "#...#....#",
+    "#...#..#.#",
+    "#...#....#",
+    "##########"
+  ]
+}

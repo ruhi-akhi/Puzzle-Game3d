@@ -1,0 +1,17 @@
+{
+  "id": 503,
+  "name": "Flip Passage",
+  "world": 5,
+  "maxMoves": 18,
+  "mechanics": ["gravity"],
+  "hint": "Flip gravity to cross otherwise unreachable floors.",
+  "grid": [
+    "##########",
+    "#@..g....#",
+    "#........#",
+    "#...g....#",
+    "#....g.G.#",
+    "#........#",
+    "##########"
+  ]
+}

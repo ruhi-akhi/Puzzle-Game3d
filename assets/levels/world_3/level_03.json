@@ -1,0 +1,16 @@
+{
+  "id": 303,
+  "name": "Glide",
+  "world": 3,
+  "maxMoves": 14,
+  "mechanics": ["ice"],
+  "hint": "Use long slides to cross gaps.",
+  "grid": [
+    "##########",
+    "#@...I...#",
+    "#..III...#",
+    "#...I....#",
+    "#....I..G#",
+    "##########"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": 304,
+  "name": "Frozen Corridor",
+  "world": 3,
+  "maxMoves": 18,
+  "mechanics": ["ice"],
+  "hint": "Plan each slide to avoid bouncing back.",
+  "grid": [
+    "##########",
+    "#@.I..I..#",
+    "#..I..I..#",
+    "#..I..I.G#",
+    "#........#",
+    "##########"
+  ]
+}

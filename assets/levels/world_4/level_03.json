@@ -1,0 +1,16 @@
+{
+  "id": 403,
+  "name": "Mirror Echo",
+  "world": 4,
+  "maxMoves": 18,
+  "mechanics": ["clone"],
+  "hint": "Use the clone to trigger distant switches.",
+  "grid": [
+    "##########",
+    "#@..#..G.#",
+    "#...#....#",
+    "#..C..#..#",
+    "#...#....#",
+    "##########"
+  ]
+}
