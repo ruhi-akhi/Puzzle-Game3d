@@ -5,34 +5,42 @@ import '../models/tile_type.dart';
 import '../../theme/world_theme.dart';
 
 class GameColors {
-  static const background = Color(0xFF0A0E17);
-  static const gridLine = Color(0xFF1A2332);
-  static const wall = Color(0xFF2D3A4F);
-  static const wallGlow = Color(0xFF4A6FA5);
-  static const floor = Color(0xFF111827);
-  static const player = Color(0xFF00F5FF);
-  static const playerGlow = Color(0x6600F5FF);
-  static const door = Color(0xFFFF6B35);
-  static const doorOpen = Color(0xFF4ADE80);
-  static const key = Color(0xFFFFD700);
-  static const box = Color(0xFF8B5CF6);
-  static const goal = Color(0xFF22D3EE);
-  static const mirror = Color(0xFFE2E8F0);
-  static const laser = Color(0xFFFF0040);
-  static const laserGlow = Color(0x88FF0040);
-  static const redSwitch = Color(0xFFEF4444);
-  static const blueSwitch = Color(0xFF3B82F6);
-  static const teleporter = Color(0xFFA855F7);
-  static const ice = Color(0xFF67E8F9);
-  static const bomb = Color(0xFFFF4444);
-  static const clone = Color(0xFF94A3B8);
-  static const gravity = Color(0xFFF59E0B);
-  static const darkZone = Color(0xFF1E1B2E);
-  static const lightZone = Color(0xFF2A2540);
-  static const neonCyan = Color(0xFF00F5FF);
-  static const neonPink = Color(0xFFFF00AA);
-  static const neonPurple = Color(0xFF8B5CF6);
-  static const hudText = Color(0xFFE2E8F0);
+  static const background = Color(0xFF10131F);
+  static const gridLine = Color(0xFF262F4B);
+  static const wall = Color(0xFF324A82);
+  static const wallOutline = Color(0xFF6A89D8);
+  static const wallPanel = Color(0xFF4B67AF);
+  static const floor = Color(0xFF17213A);
+  static const floorShadow = Color(0xFF101B31);
+  static const player = Color(0xFF7DF2FF);
+  static const playerGlow = Color(0xB300FFFF);
+  static const playerOutline = Color(0xFF3EC6FF);
+  static const door = Color(0xFFFFA75A);
+  static const doorFrame = Color(0xFFDA8745);
+  static const doorOpen = Color(0xFF6EE7B7);
+  static const key = Color(0xFFFFE26F);
+  static const keyDetail = Color(0xFFBE8F00);
+  static const box = Color(0xFFEDB57E);
+  static const boxDetail = Color(0xFFB5783F);
+  static const goal = Color(0xFF7FF2FF);
+  static const mirror = Color(0xFFDDE6F0);
+  static const mirrorGlow = Color(0xFFF5FBFF);
+  static const laser = Color(0xFFFF5D83);
+  static const laserGlow = Color(0xAAFF90AB);
+  static const redSwitch = Color(0xFFFF7A7A);
+  static const blueSwitch = Color(0xFF7CB5FF);
+  static const teleporter = Color(0xFFA76EFF);
+  static const teleporterRing = Color(0xFFE2B7FF);
+  static const ice = Color(0xFF9CF2FF);
+  static const bomb = Color(0xFFFF5E5E);
+  static const clone = Color(0xFFB9C6DD);
+  static const gravity = Color(0xFFFFCE5F);
+  static const darkZone = Color(0xFF151626);
+  static const lightZone = Color(0xFF2F3F62);
+  static const neonCyan = Color(0xFF83FBFF);
+  static const neonPink = Color(0xFFFF8FDF);
+  static const neonPurple = Color(0xFFBE92FF);
+  static const hudText = Color(0xFFECEFF5);
 }
 
 class GamePainter extends CustomPainter {
@@ -159,83 +167,96 @@ class GamePainter extends CustomPainter {
       tileSize - 2,
     );
 
-    final paint = Paint()..style = PaintingStyle.fill;
-
     switch (type) {
       case TileType.wall:
-        _drawGlassTile(canvas, rect, GameColors.wall, radius: 4, fill: 0.55);
-        _drawPulsingGlow(canvas, rect, theme.accentAlt, base: 0.08, range: 0.12);
+        _drawWall(canvas, rect);
+        break;
       case TileType.floor:
       case TileType.empty:
         _drawFloor(canvas, rect);
+        break;
       case TileType.door:
-        _drawGlassTile(canvas, rect, GameColors.door, radius: 4, fill: 0.4);
-        _drawPulsingGlow(canvas, rect, GameColors.door, base: 0.35, range: 0.3);
+        _drawDoor(canvas, rect, open: false);
+        break;
       case TileType.doorOpen:
-        _drawGlassTile(canvas, rect, GameColors.doorOpen, radius: 4, fill: 0.25);
+        _drawDoor(canvas, rect, open: true);
+        break;
       case TileType.key:
         _drawFloor(canvas, rect);
         _drawKey(canvas, rect);
+        break;
       case TileType.box:
-        _drawGlassTile(canvas, rect, GameColors.box, radius: 6, fill: 0.38);
-        _drawPulsingGlow(canvas, rect, GameColors.neonPurple, base: 0.25, range: 0.35);
+        _drawCrate(canvas, rect);
+        break;
       case TileType.goal:
         _drawFloor(canvas, rect);
         _drawGoal(canvas, rect);
+        break;
       case TileType.mirror:
+        _drawFloor(canvas, rect);
+        _drawMirror(canvas, rect, true);
+        break;
       case TileType.mirrorSlash:
         _drawFloor(canvas, rect);
         _drawMirror(canvas, rect, true);
+        break;
       case TileType.mirrorBackslash:
         _drawFloor(canvas, rect);
         _drawMirror(canvas, rect, false);
+        break;
       case TileType.laserEmitter:
         _drawFloor(canvas, rect);
         _drawLaserEmitter(canvas, rect);
+        break;
       case TileType.laserBeam:
-        paint.color = GameColors.laser;
-        canvas.drawRect(rect, paint);
-        _drawPulsingGlow(canvas, rect, GameColors.laserGlow, base: 0.45, range: 0.45, blur: 10);
+        _drawLaserBeam(canvas, rect);
+        break;
       case TileType.redSwitch:
         _drawFloor(canvas, rect);
         _drawSwitch(canvas, rect, GameColors.redSwitch, state.redSwitchOn);
+        break;
       case TileType.blueSwitch:
         _drawFloor(canvas, rect);
         _drawSwitch(canvas, rect, GameColors.blueSwitch, state.blueSwitchOn);
+        break;
       case TileType.redDoor:
-        _drawGlassTile(canvas, rect,
-            state.redSwitchOn ? GameColors.doorOpen : GameColors.redSwitch,
-            radius: 4, fill: 0.35);
+        _drawDoor(canvas, rect,
+            open: state.redSwitchOn, color: state.redSwitchOn ? GameColors.doorOpen : GameColors.redSwitch);
+        break;
       case TileType.blueDoor:
-        _drawGlassTile(canvas, rect,
-            state.blueSwitchOn ? GameColors.doorOpen : GameColors.blueSwitch,
-            radius: 4, fill: 0.35);
+        _drawDoor(canvas, rect,
+            open: state.blueSwitchOn, color: state.blueSwitchOn ? GameColors.doorOpen : GameColors.blueSwitch);
+        break;
       case TileType.teleporterA:
       case TileType.teleporterB:
         _drawFloor(canvas, rect);
         _drawTeleporter(canvas, rect);
+        break;
       case TileType.ice:
-        _drawGlassTile(canvas, rect, GameColors.ice, radius: 4, fill: 0.2);
+        _drawGlassTile(canvas, rect, GameColors.ice, radius: 8, fill: 0.28);
         _drawIce(canvas, rect);
+        break;
       case TileType.bomb:
-        paint.color = GameColors.bomb;
-        canvas.drawCircle(rect.center, tileSize * 0.35, paint);
+        _drawBomb(canvas, rect);
+        break;
       case TileType.gravityPad:
         _drawFloor(canvas, rect);
         _drawGravityPad(canvas, rect);
+        break;
       case TileType.darkZone:
-        paint.color = GameColors.darkZone;
-        canvas.drawRect(rect, paint);
+        _drawZone(canvas, rect, GameColors.darkZone);
+        break;
       case TileType.lightZone:
-        paint.color = GameColors.lightZone;
-        canvas.drawRect(rect, paint);
+        _drawZone(canvas, rect, GameColors.lightZone);
+        break;
       default:
         _drawFloor(canvas, rect);
+        break;
     }
 
     // Hairline grid — nearly invisible, tinted by the world accent.
     final gridPaint = Paint()
-      ..color = theme.accent.withValues(alpha: 0.06)
+      ..color = theme.accent.withValues(alpha: 0.08)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.5;
     canvas.drawRect(
@@ -245,20 +266,38 @@ class GamePainter extends CustomPainter {
   }
 
   void _drawFloor(Canvas canvas, Rect rect) {
-    final base = Paint()..color = GameColors.floor.withValues(alpha: 0.85);
-    canvas.drawRect(rect, base);
-    // Subtle inner accent glow that breathes with the pulse.
+    final base = Paint()
+      ..shader = LinearGradient(
+        colors: [GameColors.floor, GameColors.floorShadow],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ).createShader(rect);
+    canvas.drawRRect(RRect.fromRectAndRadius(rect, Radius.circular(tileSize * 0.18)), base);
+
     final inner = Paint()
-      ..color = theme.accent.withValues(alpha: 0.02 + 0.025 * _pulse);
-    canvas.drawRect(rect.deflate(tileSize * 0.34), inner);
+      ..color = theme.accent.withValues(alpha: 0.06 + 0.02 * _pulse)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect.deflate(tileSize * 0.18), Radius.circular(tileSize * 0.18)),
+      inner,
+    );
+
+    final dot = Paint()..color = theme.accent.withValues(alpha: 0.08);
+    final spacing = tileSize * 0.32;
+    for (var x = rect.left + spacing * 0.3; x < rect.right; x += spacing) {
+      for (var y = rect.top + spacing * 0.3; y < rect.bottom; y += spacing) {
+        canvas.drawCircle(Offset(x, y), 1.0, dot);
+      }
+    }
   }
 
   void _drawGlow(Canvas canvas, Rect rect, Color color, double intensity) {
     final glowPaint = Paint()
       ..color = color.withValues(alpha: intensity)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     canvas.drawRRect(
-      RRect.fromRectAndRadius(rect.inflate(2), const Radius.circular(4)),
+      RRect.fromRectAndRadius(rect.inflate(3), const Radius.circular(8)),
       glowPaint,
     );
   }
@@ -299,30 +338,45 @@ class GamePainter extends CustomPainter {
       x * tileSize + tileSize / 2,
       y * tileSize + tileSize / 2,
     );
-    // A brief bump in size + brightness right after a valid move.
     final flash = moveFlash.clamp(0.0, 1.0);
     final pulse = 1.0 + 0.08 * _pulseFast + 0.12 * flash;
     final radius = tileSize * 0.32 * pulse;
 
-    final core = Color.lerp(theme.accent, Colors.white, 0.25 * flash)!;
-
-    final glowPaint = Paint()
-      ..color = theme.accent.withValues(alpha: 0.45 + 0.4 * _pulse + 0.2 * flash)
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 10 + 6 * _pulse + 6 * flash);
-    canvas.drawCircle(center, radius + 6 + 2 * _pulse, glowPaint);
+    final ringPaint = Paint()
+      ..color = theme.accent.withValues(alpha: 0.28 + 0.18 * _pulse + 0.2 * flash)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+    canvas.drawCircle(center, radius + 8, ringPaint);
 
     final outerGlow = Paint()
-      ..color = theme.accent.withValues(alpha: 0.15 + 0.15 * _pulse)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
-    canvas.drawCircle(center, radius + 10, outerGlow);
+      ..color = GameColors.playerGlow.withValues(alpha: 0.22 + 0.18 * _pulse)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
+    canvas.drawCircle(center, radius + 12, outerGlow);
 
-    final paint = Paint()..color = core;
-    canvas.drawCircle(center, radius, paint);
+    final body = Paint()..color = GameColors.player;
+    canvas.drawCircle(center, radius, body);
 
-    final highlight = Paint()..color = Colors.white.withValues(alpha: 0.4);
+    final border = Paint()
+      ..color = GameColors.playerOutline
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
+    canvas.drawCircle(center, radius, border);
+
+    final eye = Paint()..color = Colors.white;
+    final leftEye = center + Offset(-radius * 0.18, -radius * 0.08);
+    final rightEye = center + Offset(radius * 0.18, -radius * 0.08);
+    canvas.drawCircle(leftEye, radius * 0.12, eye);
+    canvas.drawCircle(rightEye, radius * 0.12, eye);
+
+    final pupil = Paint()..color = Colors.black;
+    canvas.drawCircle(leftEye, radius * 0.05, pupil);
+    canvas.drawCircle(rightEye, radius * 0.05, pupil);
+
+    final highlight = Paint()..color = Colors.white.withValues(alpha: 0.35);
     canvas.drawCircle(
       center + Offset(-radius * 0.2, -radius * 0.2),
-      radius * 0.3,
+      radius * 0.26,
       highlight,
     );
   }
@@ -341,45 +395,79 @@ class GamePainter extends CustomPainter {
 
   void _drawKey(Canvas canvas, Rect rect) {
     final paint = Paint()..color = GameColors.key;
-    canvas.drawCircle(
-      Offset(rect.center.dx, rect.center.dy - 2),
-      tileSize * 0.15,
-      paint,
+    final head = Rect.fromCenter(
+      center: Offset(rect.center.dx, rect.center.dy - tileSize * 0.08),
+      width: tileSize * 0.24,
+      height: tileSize * 0.22,
     );
-    canvas.drawRect(
-      Rect.fromCenter(
-        center: Offset(rect.center.dx, rect.center.dy + 6),
-        width: 4,
-        height: tileSize * 0.2,
-      ),
-      paint,
+    canvas.drawOval(head, paint);
+
+    final shaft = Rect.fromCenter(
+      center: Offset(rect.center.dx, rect.center.dy + tileSize * 0.08),
+      width: tileSize * 0.12,
+      height: tileSize * 0.26,
     );
-    _drawPulsingGlow(canvas, rect, GameColors.key, base: 0.4, range: 0.45);
+    canvas.drawRRect(RRect.fromRectAndRadius(shaft, const Radius.circular(4)), paint);
+
+    final detail = Paint()
+      ..color = GameColors.keyDetail
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(
+      Offset(rect.center.dx, rect.center.dy - tileSize * 0.02),
+      Offset(rect.center.dx, rect.center.dy + tileSize * 0.14),
+      detail,
+    );
+    canvas.drawCircle(Offset(rect.center.dx + tileSize * 0.08, rect.center.dy + tileSize * 0.12), 3, detail);
+    canvas.drawCircle(Offset(rect.center.dx - tileSize * 0.08, rect.center.dy + tileSize * 0.12), 3, detail);
+
+    _drawPulsingGlow(canvas, rect, GameColors.key, base: 0.32, range: 0.38);
   }
 
   void _drawGoal(Canvas canvas, Rect rect) {
-    final paint = Paint()
-      ..color = theme.accentAlt.withValues(alpha: 0.35 + 0.35 * _pulse)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2 + _pulse;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(rect.deflate(4), const Radius.circular(4)),
-      paint,
-    );
-    _drawPulsingGlow(canvas, rect, theme.accentAlt, base: 0.1, range: 0.25, blur: 6);
+    final center = rect.center;
+    final outer = Paint()
+      ..color = theme.accentAlt.withValues(alpha: 0.22 + 0.18 * _pulse)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, tileSize * 0.22, outer);
+
+    final star = Paint()
+      ..color = theme.accentAlt
+      ..style = PaintingStyle.fill;
+    final path = Path();
+    const points = 5;
+    final radius = tileSize * 0.12;
+    final inner = radius * 0.45;
+    for (var i = 0; i < points * 2; i++) {
+      final angle = i * math.pi / points - math.pi / 2;
+      final r = i.isEven ? radius : inner;
+      final point = Offset(
+        center.dx + r * math.cos(angle),
+        center.dy + r * math.sin(angle),
+      );
+      if (i == 0) {
+        path.moveTo(point.dx, point.dy);
+      } else {
+        path.lineTo(point.dx, point.dy);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, star);
+
+    _drawPulsingGlow(canvas, rect, theme.accentAlt, base: 0.12, range: 0.28, blur: 10);
   }
 
   void _drawMirror(Canvas canvas, Rect rect, bool slash) {
     final paint = Paint()
       ..color = GameColors.mirror
-      ..strokeWidth = 3
+      ..strokeWidth = 4
       ..strokeCap = StrokeCap.round;
     if (slash) {
       canvas.drawLine(rect.bottomLeft, rect.topRight, paint);
     } else {
       canvas.drawLine(rect.topLeft, rect.bottomRight, paint);
     }
-    _drawGlow(canvas, rect, GameColors.mirror, 0.3);
+    _drawGlow(canvas, rect, GameColors.mirrorGlow, 0.35);
   }
 
   void _drawLaserEmitter(Canvas canvas, Rect rect) {
@@ -431,6 +519,131 @@ class GamePainter extends CustomPainter {
       ..lineTo(rect.left + 6, rect.bottom - 6)
       ..close();
     canvas.drawPath(path, paint);
+  }
+
+  void _drawWall(Canvas canvas, Rect rect) {
+    final base = Paint()
+      ..shader = LinearGradient(
+        colors: [GameColors.wall, GameColors.wallPanel],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(rect);
+    canvas.drawRRect(RRect.fromRectAndRadius(rect, Radius.circular(10)), base);
+
+    final edge = Paint()
+      ..color = GameColors.wallOutline
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    canvas.drawRRect(RRect.fromRectAndRadius(rect.deflate(1.5), Radius.circular(8)), edge);
+
+    final line = Paint()
+      ..color = Colors.white.withValues(alpha: 0.08)
+      ..strokeWidth = 1.2;
+    canvas.drawLine(rect.topLeft + const Offset(10, 10), rect.topRight - const Offset(10, -0), line);
+    canvas.drawLine(rect.bottomLeft + const Offset(10, -10), rect.bottomRight - const Offset(10, 10), line);
+    _drawGlow(canvas, rect, GameColors.wallOutline, 0.12);
+  }
+
+  void _drawDoor(Canvas canvas, Rect rect, {required bool open, Color? color}) {
+    final fill = color ?? (open ? GameColors.doorOpen : GameColors.door);
+    final base = Paint()..color = fill;
+    canvas.drawRRect(RRect.fromRectAndRadius(rect, Radius.circular(10)), base);
+
+    final frame = Paint()
+      ..color = GameColors.doorFrame
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
+    canvas.drawRRect(RRect.fromRectAndRadius(rect.deflate(2), Radius.circular(8)), frame);
+
+    if (!open) {
+      final handle = Paint()..color = Colors.black.withAlpha(210);
+      canvas.drawCircle(rect.centerRight - Offset(tileSize * 0.18, 0), tileSize * 0.08, handle);
+      canvas.drawCircle(rect.centerRight - Offset(tileSize * 0.08, 0), tileSize * 0.05, Paint()..color = GameColors.door);
+    } else {
+      final shine = Paint()
+        ..shader = RadialGradient(
+          colors: [Colors.white.withAlpha(180), Colors.transparent],
+          radius: 0.7,
+        ).createShader(Rect.fromCircle(center: rect.center, radius: tileSize * 0.5));
+      canvas.drawCircle(rect.center, tileSize * 0.4, shine);
+    }
+
+    _drawGlow(canvas, rect, fill.withAlpha(160), 0.2);
+  }
+
+  void _drawCrate(Canvas canvas, Rect rect) {
+    final box = Paint()..color = GameColors.box;
+    final border = Paint()
+      ..color = GameColors.boxDetail
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5;
+    canvas.drawRRect(RRect.fromRectAndRadius(rect, Radius.circular(10)), box);
+    canvas.drawRRect(RRect.fromRectAndRadius(rect.deflate(2), Radius.circular(8)), border);
+
+    final top = Paint()
+      ..color = GameColors.box.withAlpha(180);
+    canvas.drawRect(Rect.fromLTWH(rect.left + 4, rect.top + 4, rect.width - 8, rect.height * 0.22), top);
+
+    final plank = Paint()
+      ..color = GameColors.boxDetail
+      ..strokeWidth = 3;
+    for (var i = 1; i <= 2; i++) {
+      final x = rect.left + rect.width * (0.25 * i);
+      canvas.drawLine(Offset(x, rect.top + 6), Offset(x, rect.bottom - 6), plank);
+    }
+
+    _drawGlow(canvas, rect, GameColors.boxDetail, 0.18);
+  }
+
+  void _drawLaserBeam(Canvas canvas, Rect rect) {
+    final paint = Paint()
+      ..shader = LinearGradient(
+        colors: [GameColors.laser.withAlpha(220), GameColors.laser.withAlpha(120)],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(rect);
+    canvas.drawRRect(RRect.fromRectAndRadius(rect, Radius.circular(6)), paint);
+    _drawPulsingGlow(canvas, rect, GameColors.laserGlow, base: 0.4, range: 0.35, blur: 16);
+  }
+
+  void _drawBomb(Canvas canvas, Rect rect) {
+    final base = Paint()..color = GameColors.bomb;
+    canvas.drawCircle(rect.center, tileSize * 0.32, base);
+
+    final rim = Paint()
+      ..color = Colors.black.withAlpha(180)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
+    canvas.drawCircle(rect.center, tileSize * 0.32, rim);
+
+    final fuse = Paint()
+      ..color = Colors.orangeAccent
+      ..strokeWidth = 4;
+    canvas.drawLine(
+      Offset(rect.center.dx, rect.top + tileSize * 0.05),
+      Offset(rect.center.dx, rect.top - tileSize * 0.05),
+      fuse,
+    );
+    canvas.drawCircle(
+      Offset(rect.center.dx, rect.top - tileSize * 0.07),
+      tileSize * 0.05,
+      Paint()..color = Colors.yellowAccent,
+    );
+
+    _drawGlow(canvas, rect, GameColors.bomb, 0.35);
+  }
+
+  void _drawZone(Canvas canvas, Rect rect, Color color) {
+    final paint = Paint()..color = color;
+    canvas.drawRRect(RRect.fromRectAndRadius(rect, Radius.circular(10)), paint);
+    final dashPaint = Paint()
+      ..color = Colors.white.withAlpha(70)
+      ..strokeWidth = 1.5;
+    final step = 8.0;
+    for (var x = rect.left + 4; x < rect.right - 4; x += step * 2) {
+      canvas.drawLine(Offset(x, rect.bottom - 6), Offset(x + step, rect.bottom - 6), dashPaint);
+    }
+    _drawGlow(canvas, rect, color.withAlpha(120), 0.15);
   }
 
   @override
